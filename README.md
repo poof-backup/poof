@@ -10,5 +10,5 @@ Poof!  2-way data sync/backup/restore against a cloud drive.
 
 
 ---
-&169; the poof! contributors
+&#169; the poof! contributors
 

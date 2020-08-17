@@ -5,5 +5,5 @@
 
 
 ---
-&169; the poof! contributors
+&#169; the poof! contributors
 
