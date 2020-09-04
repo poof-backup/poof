@@ -8,15 +8,10 @@ BUILD=./build
 DEVPI_PASSWORD=nopasswordsetyet
 DEVPI_USER=pr3d4t0r
 DIST=./dist
-DOCKER_IMAGE=pr3d4t0r/$(shell cat dockerimagename.txt)
-DOCKER_VERSION=$(shell cat dockerimageversion.txt)
-MODULE=$(shell cat modulename.txt)
+MODULE=$(shell awk -F "[\"]" '/name/ { printf("%s\n", $$2); }' pyproject.toml)
 REQUIREMENTS=requirements.txt
 SITE_DATA=./site-data
-VERSION=$(shell cat version.txt)
-
-
-include ./build.mk
+VERSION=$(shell awk -F "[\"]" '/version/ { printf("%s\n", $$2); }' pyproject.toml)
 
 
 # Targets:
@@ -24,60 +19,26 @@ include ./build.mk
 all: ALWAYS
 	make test
 	make module
-	make publish
-
-
-bootstrap: ALWAYS
-	pipenv install --dev pipenv-setup
-	pipenv install --dev pudb
-	pipenv install --dev pytest
 
 
 clean:
-	rm -Rf $(BUILD)/*
-	rm -Rf $(DIST)/*
-	rm -Rfv $$(find basdtracks | awk '/__pycache__$$/')
-	rm -Rfv $$(find test | awk '/__pycache__$$/')
-	rm -Rfv $$(find . | awk '/.ipynb_checkpoints/')
-	pip uninstall -y $(MODULE)==$(VERSION) || true
+	rm -Rf $(DIST)/* || true
+	rm -Rfv $$(find $(MODULE) | awk '/__pycache__/')
+	rm -Rfv $$(find tests | awk '/__pycache__/')
+	poetry remove -n $(MODULE)==$(VERSION) || true
     
 
-install:
-	pushd resources/ && pip install -e .. && popd
-	pip list | awk 'NR < 3 { print; } /basdtracks/'
-
-
 module:
-	poetry install
-	python setup.py bdist_wheel
-
-
-nuke: ALWAYS
-	make clean
-	rm -Rf $(shell find basdtracks | awk '/__pycache__$$/')
-	rm -Rf $(shell find test/ | awk '/__pycache__$$/')
-
-
-refresh: ALWAYS
-	pip install -U -r requirements.txt
-
-
-resetpy: ALWAYS
-	rm -Rfv ./.Python ./bin ./build ./dist ./include ./lib
+	poetry check
+	poetry build -n -f wheel
 
 
 test: ALWAYS
-	[[ -d $(SITE_DATA) ]] || mkdir -p $(SITE_DATA)
-	pip install -r requirements.txt
-	pip install -e .
-	pytest -v ./test/basdtracks/test_module.py
-	pip uninstall -y $(MODULE)==$(VERSION) || true
-	rm -Rfv $$(find basdtracks | awk '/__pycache__$$/')
-	rm -Rfv $$(find test | awk '/__pycache__$$/')
-
-
-update:
-	pipenv update
+	poetry check
+	pytest -v ./tests/test_poof.py
+	poetry remove -n $(MODULE)==$(VERSION) || true
+	rm -Rfv $$(find $(MODULE) | awk '/__pycache__/')
+	rm -Rfv $$(find tests | awk '/__pycache__/')
 
 
 ALWAYS:

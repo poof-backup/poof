@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "poof"
-version = "0.1.0"
+version = "1.0.0"
 description = ""
 authors = ["pr3d4t0r <poof.project@cime.net>"]
 
