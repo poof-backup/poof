@@ -3,7 +3,10 @@
 
 
 from poof import _parseCLI
+from poof import die
 from poof import main
+from poof import verifyEnvironment
+from poof import RCLONE_PROG_TEST
 
 import copy
 import sys
@@ -34,6 +37,16 @@ def test__parseCLI():
     del(sys.argv[1])
 
     sys.argv.append('test')
+
+
+def test_verifyEnvironment():
+    assert verifyEnvironment(program = RCLONE_PROG_TEST)
+    assert not verifyEnvironment(program = 'bogusxxxxx1213')
+    raise NotImplementedError
+
+
+def test_die():
+    die('nothing to do', 0)
 
 
 def test_main():

@@ -10,6 +10,7 @@ repository = "https://github.com/pr3d4t0r/poof"
 python = "3.8.5"
 pyflakes = "^2.2.0"
 pudb = "^2019.2"
+appdirs = "^1.4.4"
 
 [tool.poetry.dev-dependencies]
 pytest = "^4.6"
