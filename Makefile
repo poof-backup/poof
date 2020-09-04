@@ -2,7 +2,7 @@
 # vim: set fileencoding=utf-8:
 
 
-SHELL=/bin/bash
+SHELL=/bin/zsh
 
 BUILD=./build
 DEVPI_PASSWORD=nopasswordsetyet
@@ -12,8 +12,9 @@ DOCKER_IMAGE=pr3d4t0r/$(shell cat dockerimagename.txt)
 DOCKER_VERSION=$(shell cat dockerimageversion.txt)
 MODULE=$(shell cat modulename.txt)
 REQUIREMENTS=requirements.txt
-VERSION=$(shell cat version.txt)
 SITE_DATA=./site-data
+VERSION=$(shell cat version.txt)
+
 
 include ./build.mk
 
@@ -47,7 +48,7 @@ install:
 
 
 module:
-	pipenv install
+	poetry install
 	python setup.py bdist_wheel
 
 

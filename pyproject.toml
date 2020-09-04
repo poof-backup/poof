@@ -2,10 +2,10 @@
 name = "poof"
 version = "0.1.0"
 description = ""
-authors = ["Eugene Ciurana <eugenex@cime.net>"]
+authors = ["pr3d4t0r <poof.project@cime.net>"]
 
 [tool.poetry.dependencies]
-python = "^2.7"
+python = "3.8.5"
 
 [tool.poetry.dev-dependencies]
 pytest = "^4.6"
