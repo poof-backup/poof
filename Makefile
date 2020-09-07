@@ -22,6 +22,7 @@ all: ALWAYS
 
 
 clean:
+	poetry check
 	rm -Rf $(DIST)/* || true
 	rm -Rfv $$(find $(MODULE) | awk '/__pycache__/')
 	rm -Rfv $$(find tests | awk '/__pycache__/')
