@@ -22,11 +22,17 @@ all: ALWAYS
 
 
 clean:
+	poetry check
 	rm -Rf $(DIST)/* || true
 	rm -Rfv $$(find $(MODULE) | awk '/__pycache__/')
 	rm -Rfv $$(find tests | awk '/__pycache__/')
 	poetry remove -n $(MODULE)==$(VERSION) || true
     
+
+install:
+	poetry check
+	pushd dist ; poetry install -n $(MODULE)==$(VERSION) ; popd
+
 
 module:
 	poetry check

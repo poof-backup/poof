@@ -129,7 +129,7 @@ dmypy.json
 .pyre/
 
 
-# COVIDvu
+# Poof!
 
 **.NERD*
 **.bash_*
@@ -145,38 +145,13 @@ dmypy.json
 **/.theano
 **/.vim/*
 **/database/*
+**/poof.conf
 **/pyvenv.cfg
-**/resources/counties-US-all*json
-**/resources/hospital-beds-*US.json
-**/snapshots/*
-**/work/*.tar.gz
-**/work/COVID-19
-**/work/NYT*
-**/work/last-update.txt
-**/work/src/*
+**/rclone-poof*
 **rclone.conf
-**run.env
-**site-data*
 *swp
-.viminfo
-work/*.json
 
-
-# Python virtual environment
-
-**/bin
-**/etc
-**/include
-**/lib
-**/share
-
-
-# Windows virtualenv
-work/env
 
 # pycharm
 **.idea
 
-# figures
-work/figures/*
-!work/figures/.gitkeep
