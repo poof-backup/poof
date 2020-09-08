@@ -29,6 +29,11 @@ clean:
 	poetry remove -n $(MODULE)==$(VERSION) || true
     
 
+install:
+	poetry check
+	pushd dist ; poetry install -n $(MODULE)==$(VERSION) ; popd
+
+
 module:
 	poetry check
 	poetry build -n -f wheel

@@ -2,16 +2,18 @@
 # vim: set fileencoding=utf-8:
 
 
-from poof import ConfigStatus
+from poof import PoofStatus
 from poof import RCLONE_PROG_TEST
 from poof import _parseCLI
 from poof import die
 from poof import getOrCreateCloningConfiguration
 from poof import getOrCreateConfiguration
 from poof import main
+from poof import neuter
 from poof import verifyEnvironment
 
 import copy
+import json
 import os
 import shutil
 import sys
@@ -25,11 +27,11 @@ realArgs = copy.deepcopy(sys.argv)
 del sys.argv[1:]
 sys.argv.append('test')
 
-TEST_CLOUD_TYPE        = 's3'
-TEST_POOF_CONFIG_DIR   = './tests/config'
-TEST_POOF_CONFIG_FILES = {
-    'poof.config': os.path.join(TEST_POOF_CONFIG_DIR, 'poof.config'),
-    'rclone-poof.config': os.path.join(TEST_POOF_CONFIG_DIR, 'rclone-poof.config'),
+TEST_CLOUD_TYPE      = 's3'
+TEST_POOF_CONF_DIR   = './tests/config'
+TEST_POOF_CONF_FILES = {
+    'poof.conf': os.path.join(TEST_POOF_CONF_DIR, 'poof.conf'),
+    'rclone-poof.conf': os.path.join(TEST_POOF_CONF_DIR, 'rclone-poof.conf'),
 }
 
 
@@ -53,46 +55,65 @@ def test__parseCLI():
 
 def _nukeTestConfigDir():
         try:
-            shutil.rmtree(TEST_POOF_CONFIG_DIR)
+            shutil.rmtree(TEST_POOF_CONF_DIR)
         except:
             pass
 
 
 def test_getOrCreateConfiguration():
-    poofConfigFile = TEST_POOF_CONFIG_FILES['poof.config']
+    poofConfFile = TEST_POOF_CONF_FILES['poof.conf']
 
-    if os.path.exists(poofConfigFile):
+    if os.path.exists(poofConfFile):
         _nukeTestConfigDir()
 
-    poofConfig = getOrCreateConfiguration(TEST_POOF_CONFIG_FILES, TEST_POOF_CONFIG_DIR)
+    poofConf = getOrCreateConfiguration(TEST_POOF_CONF_FILES, TEST_POOF_CONF_DIR)
 
-    assert poofConfig['configFile'] == poofConfigFile
-    assert TEST_POOF_CONFIG_DIR in poofConfig['paths']
+    assert poofConf['confFile'] == poofConfFile
+    assert TEST_POOF_CONF_DIR in poofConf['paths']
 
 
 def test_getOrCreateCloningConfiguration():
-    config = getOrCreateCloningConfiguration(TEST_POOF_CONFIG_FILES, TEST_POOF_CONFIG_DIR)
+    conf = getOrCreateCloningConfiguration(TEST_POOF_CONF_FILES, TEST_POOF_CONF_DIR)
 
-    assert config.get('my-poof', 'type') == TEST_CLOUD_TYPE
+    assert conf.get('my-poof', 'type') == TEST_CLOUD_TYPE
 
 
 def test_verifyEnvironment():
     bogusCloningProgram = 'bogusxxxxx1213'
     _nukeTestConfigDir()
 
-    assert verifyEnvironment(program = bogusCloningProgram, configFiles = TEST_POOF_CONFIG_FILES) == (bogusCloningProgram, ConfigStatus.MISSING_CLONING_PROGRAM)
-    assert verifyEnvironment(program = RCLONE_PROG_TEST, configFiles = TEST_POOF_CONFIG_FILES, allCompoents = False) == (None, ConfigStatus.OK)
+    assert verifyEnvironment(component = bogusCloningProgram, confFiles = TEST_POOF_CONF_FILES) == (bogusCloningProgram, PoofStatus.MISSING_CLONING_PROGRAM)
+    assert verifyEnvironment(component = RCLONE_PROG_TEST, confFiles = TEST_POOF_CONF_FILES, allCompoents = False) == (None, PoofStatus.OK)
+    assert verifyEnvironment(component = RCLONE_PROG_TEST, confFiles = TEST_POOF_CONF_FILES) == ('poof.conf', PoofStatus.MISSING_CONFIG_FILE)
+    poofConf = getOrCreateConfiguration(TEST_POOF_CONF_FILES, TEST_POOF_CONF_DIR) 
+    assert verifyEnvironment(component = RCLONE_PROG_TEST, confFiles = TEST_POOF_CONF_FILES) == ('rclone-poof.conf', PoofStatus.MISSING_CONFIG_FILE)
+    getOrCreateCloningConfiguration(TEST_POOF_CONF_FILES, TEST_POOF_CONF_DIR)
 
-    raise NotImplementedError
+    assert len(poofConf['paths']) == 1 # Only for testing - one entry, itself
+
+    poofConf['paths']['/tmp'] = 'tmp'
+    with open(TEST_POOF_CONF_FILES['poof.conf'], 'w') as outputFile:
+        json.dump(poofConf, outputFile)
+
+    assert verifyEnvironment(component = RCLONE_PROG_TEST, confFiles = TEST_POOF_CONF_FILES) == (TEST_POOF_CONF_FILES['rclone-poof.conf'], PoofStatus.WARN_MISCONFIGURED)
+    # TODO: All failure cases tested, normal op is ignored for now.
+    # assert verifyEnvironment(component = RCLONE_PROG_TEST, confFiles = TEST_POOF_CONF_FILES) == (None, PoofStatus.OK)
 
 
 def test_die():
     die('nothing to do', 0)
 
 
+def test_neuter():
+    mode = os.stat(TEST_POOF_CONF_DIR).st_mode
+    os.chmod(TEST_POOF_CONF_DIR, 0)
+    with pytest.raises(Exception):
+        neuter(TEST_POOF_CONF_DIR)
+    os.chmod(TEST_POOF_CONF_DIR, mode)
+
+    neuter(TEST_POOF_CONF_DIR)
+
+
 def test_main():
     assert main() == True
-
-
-# test_verifyEnvironment()
 
