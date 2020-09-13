@@ -150,6 +150,7 @@ dmypy.json
 **/rclone-poof*
 **rclone.conf
 *swp
+*poof_*bak
 
 
 # pycharm

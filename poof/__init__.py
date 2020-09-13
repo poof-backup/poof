@@ -12,6 +12,7 @@ import json
 import shutil
 import os
 import stat
+import subprocess
 import sys
 
 
@@ -86,6 +87,7 @@ def _initializeConfigIn(confFile, confDir):
                 'bucket': 'poofbackup',
                 'confFile': confFile,
                 'paths': paths,
+                'remote': 'poof', # rclone .INI section
             }
             json.dump(basicConfig, outputFile, indent = 4, sort_keys = True)
         os.chmod(confFile, stat.S_IRUSR | stat.S_IWUSR)
@@ -154,14 +156,14 @@ def verifyEnvironment(component = RCLONE_PROG, confFiles = POOF_CONFIG_FILES, al
     if not shutil.which(component):
         return component, PoofStatus.MISSING_CLONING_PROGRAM
 
-    print('%s - %s' % (component, status))
+    print('installed %s? - %s' % (component, status))
 
     if allCompoents:
         for component, path in confFiles.items():
             if not os.path.exists(path):
                 status = PoofStatus.MISSING_CONFIG_FILE
 
-            print('%s - %s' % (component, status))
+            print('exists %s? - %s' % (component, status))
 
             if status != PoofStatus.OK:
                 return component, status
@@ -171,7 +173,7 @@ def verifyEnvironment(component = RCLONE_PROG, confFiles = POOF_CONFIG_FILES, al
         if len(conf['paths']) == 1:
             component = confFiles['poof.conf']
             status    = PoofStatus.WARN_MISCONFIGURED
-            print('%s - %s' % (component, status))
+            print('configuration %s? - %s' % (component, status))
 
             return component, status
 
@@ -181,7 +183,7 @@ def verifyEnvironment(component = RCLONE_PROG, confFiles = POOF_CONFIG_FILES, al
             if cloningConf.get(section, 'secret_access_key') == 'BOGUS-SECRET-KEY-USE-YOURS':
                 component = confFiles['rclone-poof.conf']
                 status    = PoofStatus.WARN_MISCONFIGURED
-                print('%s - %s' % (component, status))
+                print('configuration %s? - %s' % (component, status))
 
                 return component, status
 
@@ -201,6 +203,42 @@ def neuter(confDir = POOF_CONFIG_DIR):
         pass  # Already not here
 
 
+def upload(confDir = POOF_CONFIG_DIR, confFiles = POOF_CONFIG_FILES):
+    _, status = verifyEnvironment(confFiles = confFiles)
+
+    if status != PoofStatus.OK:
+        die("cannot poof the files to the cloud", 4)
+
+    conf    = getOrCreateConfiguration()
+    poofDir = None
+
+    for localDir, cloudDir in conf['paths'].items():
+        args = ( RCLONE_PROG,
+                '--config',
+                confFiles['rclone-poof.conf'],
+                '-v',
+                'sync', 
+                localDir,
+                '%s:%s/%s' % (conf['remote'], conf['bucket'], cloudDir),
+              )
+        result = subprocess.run(args)
+
+        try:
+            result.check_returncode()
+        except:
+            die('%s failed = %d - see output for details' % (RCLONE_PROG, result.returncode), 3)
+
+        if 'poof' not in localDir:
+            shutil.rmtree(localDir)
+        else:
+            poofDir = localDir
+
+    if poofDir:
+        shutil.rmtree(poofDir)
+
+    return True
+
+
 def main():
     command = _parseCLI()['command']
 
@@ -215,6 +253,8 @@ def main():
             neuter()
         except Exception as e:
             die('unable to neuter poof directory at %s - %s' % (POOF_CONFIG_DIR, e), 2)
+    elif command == 'upload':
+        upload()
     elif command == 'verify':
         if verifyEnvironment() != (None, PoofStatus.OK):
             die(EPILOG, 1)

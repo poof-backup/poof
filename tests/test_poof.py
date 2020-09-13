@@ -2,6 +2,8 @@
 # vim: set fileencoding=utf-8:
 
 
+from unittest.mock import patch
+
 from poof import PoofStatus
 from poof import RCLONE_PROG_TEST
 from poof import _parseCLI
@@ -10,6 +12,7 @@ from poof import getOrCreateCloningConfiguration
 from poof import getOrCreateConfiguration
 from poof import main
 from poof import neuter
+from poof import upload
 from poof import verifyEnvironment
 
 import copy
@@ -102,6 +105,12 @@ def test_verifyEnvironment():
 
 def test_die():
     die('nothing to do', 0)
+
+
+def test_upload():
+    with patch('poof.upload') as upload:
+        # Nothing to do in the unit test - this needs integration testing fo' sho'
+        assert upload(confDir = TEST_POOF_CONF_DIR)
 
 
 def test_neuter():
