@@ -8,12 +8,13 @@ repository = "https://github.com/pr3d4t0r/poof"
 
 [tool.poetry.dependencies]
 python = "3.8.5"
-pyflakes = "^2.2.0"
-pudb = "^2019.2"
 appdirs = "^1.4.4"
 
 [tool.poetry.dev-dependencies]
-pytest = "^4.6"
+pudb = "^2019.2"
+pyflakes = "^2.2.0"
+pytest = "^6.0"
+pytest-mock = "^3.3.1"
 
 [tool.poetry.scripts]
 poof = 'poof:main'
