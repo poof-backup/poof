@@ -12,8 +12,8 @@ from poof import getOrCreateCloningConfiguration
 from poof import getOrCreateConfiguration
 from poof import main
 from poof import neuter
-from poof import upload
 from poof import verifyEnvironment
+from poof import viewConfig
 
 import copy
 import json
@@ -107,10 +107,28 @@ def test_die():
     die('nothing to do', 0)
 
 
+def test__clone():
+    with patch('poof._clone') as _clone:
+        # Nothing to do in the unit test - this needs integration testing fo' sho'
+        assert _clone(confDir = TEST_POOF_CONF_DIR)
+
+
 def test_upload():
     with patch('poof.upload') as upload:
         # Nothing to do in the unit test - this needs integration testing fo' sho'
         assert upload(confDir = TEST_POOF_CONF_DIR)
+
+
+def test_download():
+    with patch('poof.download') as download:
+        assert download(confDir = TEST_POOF_CONF_DIR)
+
+
+def test_viewConfig():
+    # TODO: Implementation
+#     conf, cloneConf = viewConfig(confFiles = TEST_POOF_CONF_FILES)
+#     raise NotImplementedError
+    pass
 
 
 def test_neuter():
@@ -125,4 +143,10 @@ def test_neuter():
 
 def test_main():
     assert main() == True
+
+
+# test_getOrCreateConfiguration()
+# test_getOrCreateCloningConfiguration()
+# test_verifyEnvironment()
+# test_viewConfig()
 
