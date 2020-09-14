@@ -28,6 +28,7 @@ VALID_COMMANDS   = (
         'test',
         'upload',
         'verify',
+        'view',
     )
 
 EPILOG = """
@@ -89,7 +90,7 @@ def _initializeConfigIn(confFile, confDir):
                 'paths': paths,
                 'remote': 'poof', # rclone .INI section
             }
-            json.dump(basicConfig, outputFile, indent = 4, sort_keys = True)
+            json.dump(basicConfig, outputFile, indent = 2, sort_keys = True)
         os.chmod(confFile, stat.S_IRUSR | stat.S_IWUSR)
 
 
@@ -203,7 +204,7 @@ def neuter(confDir = POOF_CONFIG_DIR):
         pass  # Already not here
 
 
-def upload(confDir = POOF_CONFIG_DIR, confFiles = POOF_CONFIG_FILES):
+def _clone(toCloud, confDir = POOF_CONFIG_DIR, confFiles = POOF_CONFIG_FILES):
     _, status = verifyEnvironment(confFiles = confFiles)
 
     if status != PoofStatus.OK:
@@ -213,14 +214,24 @@ def upload(confDir = POOF_CONFIG_DIR, confFiles = POOF_CONFIG_FILES):
     poofDir = None
 
     for localDir, cloudDir in conf['paths'].items():
-        args = ( RCLONE_PROG,
-                '--config',
-                confFiles['rclone-poof.conf'],
-                '-v',
-                'sync', 
-                localDir,
-                '%s:%s/%s' % (conf['remote'], conf['bucket'], cloudDir),
-              )
+        if toCloud:
+            args = ( RCLONE_PROG,
+                    '--config',
+                    confFiles['rclone-poof.conf'],
+                    '-v',
+                    'sync', 
+                    localDir,
+                    '%s:%s/%s' % (conf['remote'], conf['bucket'], cloudDir),
+                  )
+        else:
+            args = ( RCLONE_PROG,
+                    '--config',
+                    confFiles['rclone-poof.conf'],
+                    '-v',
+                    'sync', 
+                    '%s:%s/%s' % (conf['remote'], conf['bucket'], cloudDir),
+                    localDir,
+                  )
         result = subprocess.run(args)
 
         try:
@@ -228,15 +239,36 @@ def upload(confDir = POOF_CONFIG_DIR, confFiles = POOF_CONFIG_FILES):
         except:
             die('%s failed = %d - see output for details' % (RCLONE_PROG, result.returncode), 3)
 
-        if 'poof' not in localDir:
+        if toCloud and 'poof' not in localDir:
             shutil.rmtree(localDir)
         else:
             poofDir = localDir
 
-    if poofDir:
-        shutil.rmtree(poofDir)
+    if toCloud and poofDir:
+        neuter(confDir)
 
     return True
+
+
+def upload(confDir = POOF_CONFIG_DIR, confFiles = POOF_CONFIG_FILES):
+    return _clone(True, confDir = confDir, confFiles = confFiles)
+
+
+def download(confDir = POOF_CONFIG_DIR, confFiles = POOF_CONFIG_FILES):
+    return _clone(False, confDir = confDir, confFiles = confFiles)
+
+
+def viewConfig(confFiles = POOF_CONFIG_FILES):
+#     component, status = verifyEnvironment(confFiles = confFiles)
+# 
+#     if status != PoofStatus.OK:
+#         return component, status
+# 
+#     conf = getOrCreateConfiguration(confFiles = confFiles)
+#     cloneConf = getOrCreateCloningConfiguration(confFiles = confFiles)
+# 
+#     return conf, cloneConf
+    raise NotImplementedError
 
 
 def main():
@@ -248,6 +280,8 @@ def main():
         getOrCreateConfiguration()
     elif command == 'cconfig':
         getOrCreateCloningConfiguration()
+    elif command == 'download':
+        download()
     elif command == 'neuter':
         try:
             neuter()

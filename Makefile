@@ -31,7 +31,7 @@ clean:
 
 install:
 	poetry check
-	pushd dist ; poetry install -n $(MODULE)==$(VERSION) ; popd
+	poetry add -n $(MODULE)==$(VERSION)
 
 
 module:
