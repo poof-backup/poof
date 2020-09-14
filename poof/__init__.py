@@ -204,6 +204,10 @@ def neuter(confDir = POOF_CONFIG_DIR):
         pass  # Already not here
 
 
+def _nukeDirectory(path):
+    raise NotImplementedError
+
+
 def _clone(toCloud, confDir = POOF_CONFIG_DIR, confFiles = POOF_CONFIG_FILES):
     _, status = verifyEnvironment(confFiles = confFiles)
 
@@ -289,7 +293,7 @@ def main():
             die('unable to neuter poof directory at %s - %s' % (POOF_CONFIG_DIR, e), 2)
     elif command == 'upload':
         upload()
-    elif command == 'verify':
+    elif command == 'verify' or command == 'check':
         if verifyEnvironment() != (None, PoofStatus.OK):
             die(EPILOG, 1)
 

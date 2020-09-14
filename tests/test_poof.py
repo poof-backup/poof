@@ -6,6 +6,7 @@ from unittest.mock import patch
 
 from poof import PoofStatus
 from poof import RCLONE_PROG_TEST
+from poof import _nukeDirectory
 from poof import _parseCLI
 from poof import die
 from poof import getOrCreateCloningConfiguration
@@ -13,7 +14,7 @@ from poof import getOrCreateConfiguration
 from poof import main
 from poof import neuter
 from poof import verifyEnvironment
-from poof import viewConfig
+# from poof import viewConfig
 
 import copy
 import json
@@ -139,6 +140,10 @@ def test_neuter():
     os.chmod(TEST_POOF_CONF_DIR, mode)
 
     neuter(TEST_POOF_CONF_DIR)
+
+
+def test__nukeDirectory():
+    assert _nukeDirectory()
 
 
 def test_main():
