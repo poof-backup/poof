@@ -132,6 +132,16 @@ def test_viewConfig():
     pass
 
 
+def test__nukeDirectory():
+    bogusDir = os.path.join(TEST_POOF_CONF_DIR, 'bogusxxxxx1213')
+    status, error = _nukeDirectory(bogusDir)
+    assert not status
+
+    os.makedirs(bogusDir, exist_ok = True)
+    status, error = _nukeDirectory(bogusDir)
+    assert status
+
+
 def test_neuter():
     mode = os.stat(TEST_POOF_CONF_DIR).st_mode
     os.chmod(TEST_POOF_CONF_DIR, 0)
@@ -140,10 +150,6 @@ def test_neuter():
     os.chmod(TEST_POOF_CONF_DIR, mode)
 
     neuter(TEST_POOF_CONF_DIR)
-
-
-def test__nukeDirectory():
-    assert _nukeDirectory()
 
 
 def test_main():
