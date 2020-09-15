@@ -6,6 +6,7 @@ from unittest.mock import patch
 
 from poof import PoofStatus
 from poof import RCLONE_PROG_TEST
+from poof import _nukeDirectory
 from poof import _parseCLI
 from poof import die
 from poof import getOrCreateCloningConfiguration
@@ -13,7 +14,7 @@ from poof import getOrCreateConfiguration
 from poof import main
 from poof import neuter
 from poof import verifyEnvironment
-from poof import viewConfig
+# from poof import viewConfig
 
 import copy
 import json
@@ -129,6 +130,16 @@ def test_viewConfig():
 #     conf, cloneConf = viewConfig(confFiles = TEST_POOF_CONF_FILES)
 #     raise NotImplementedError
     pass
+
+
+def test__nukeDirectory():
+    bogusDir = os.path.join(TEST_POOF_CONF_DIR, 'bogusxxxxx1213')
+    status, error = _nukeDirectory(bogusDir)
+    assert not status
+
+    os.makedirs(bogusDir, exist_ok = True)
+    status, error = _nukeDirectory(bogusDir)
+    assert status
 
 
 def test_neuter():

@@ -20,6 +20,7 @@ import sys
 
 RCLONE_PROG      = 'rclone'
 RCLONE_PROG_TEST = 'ls' # a program we know MUST exist to the which command
+SPECIAL_DIRS     = ( 'Downloads', 'Documents' )
 VALID_COMMANDS   = ( 
         'cconfig',
         'config',
@@ -204,6 +205,19 @@ def neuter(confDir = POOF_CONFIG_DIR):
         pass  # Already not here
 
 
+def _nukeDirectory(path):
+    result = True
+    error  = None
+
+    try:
+        shutil.rmtree(path)
+    except Exception as e:
+        error  = e 
+        result = False
+
+    return result, error
+
+
 def _clone(toCloud, confDir = POOF_CONFIG_DIR, confFiles = POOF_CONFIG_FILES):
     _, status = verifyEnvironment(confFiles = confFiles)
 
@@ -214,6 +228,9 @@ def _clone(toCloud, confDir = POOF_CONFIG_DIR, confFiles = POOF_CONFIG_FILES):
     poofDir = None
 
     for localDir, cloudDir in conf['paths'].items():
+        if localDir.endswith(os.sep):
+            localDir = localDir[:-1]
+
         if toCloud:
             args = ( RCLONE_PROG,
                     '--config',
@@ -223,15 +240,20 @@ def _clone(toCloud, confDir = POOF_CONFIG_DIR, confFiles = POOF_CONFIG_FILES):
                     localDir,
                     '%s:%s/%s' % (conf['remote'], conf['bucket'], cloudDir),
                   )
+            processingItem = localDir
         else:
+            cloudPath ='%s:%s/%s' % (conf['remote'], conf['bucket'], cloudDir) 
             args = ( RCLONE_PROG,
                     '--config',
                     confFiles['rclone-poof.conf'],
                     '-v',
                     'sync', 
-                    '%s:%s/%s' % (conf['remote'], conf['bucket'], cloudDir),
+                    cloudPath,
                     localDir,
                   )
+            processingItem = cloudPath
+
+        print('\nprocessing: %s' % processingItem)
         result = subprocess.run(args)
 
         try:
@@ -240,7 +262,13 @@ def _clone(toCloud, confDir = POOF_CONFIG_DIR, confFiles = POOF_CONFIG_FILES):
             die('%s failed = %d - see output for details' % (RCLONE_PROG, result.returncode), 3)
 
         if toCloud and 'poof' not in localDir:
-            shutil.rmtree(localDir)
+            status, error = _nukeDirectory(localDir)
+            if not status:
+                dirItem = os.path.split(error.filename)[1].replace(os.sep, '')
+                if dirItem in SPECIAL_DIRS:
+                    print('  > special dir %s not deleted' % localDir)
+                else:
+                    die('%s while removing %s' % (error, os.path.join(localDir, dirItem)), 5)
         else:
             poofDir = localDir
 
@@ -289,7 +317,7 @@ def main():
             die('unable to neuter poof directory at %s - %s' % (POOF_CONFIG_DIR, e), 2)
     elif command == 'upload':
         upload()
-    elif command == 'verify':
+    elif command == 'verify' or command == 'check':
         if verifyEnvironment() != (None, PoofStatus.OK):
             die(EPILOG, 1)
 
