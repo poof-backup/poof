@@ -22,6 +22,7 @@ RCLONE_PROG      = 'rclone'
 RCLONE_PROG_TEST = 'ls' # a program we know MUST exist to the which command
 SPECIAL_DIRS     = ( 'Downloads', 'Documents' )
 VALID_COMMANDS   = ( 
+        'backup',
         'cconfig',
         'config',
         'download',
@@ -218,7 +219,7 @@ def _nukeDirectory(path):
     return result, error
 
 
-def _clone(toCloud, confDir = POOF_CONFIG_DIR, confFiles = POOF_CONFIG_FILES):
+def _clone(toCloud, confDir = POOF_CONFIG_DIR, confFiles = POOF_CONFIG_FILES, nukeLocal = True):
     _, status = verifyEnvironment(confFiles = confFiles)
 
     if status != PoofStatus.OK:
@@ -261,7 +262,7 @@ def _clone(toCloud, confDir = POOF_CONFIG_DIR, confFiles = POOF_CONFIG_FILES):
         except:
             die('%s failed = %d - see output for details' % (RCLONE_PROG, result.returncode), 3)
 
-        if toCloud and 'poof' not in localDir:
+        if toCloud and 'poof' not in localDir and nukeLocal:
             status, error = _nukeDirectory(localDir)
             if not status:
                 dirItem = os.path.split(error.filename)[1].replace(os.sep, '')
@@ -269,7 +270,7 @@ def _clone(toCloud, confDir = POOF_CONFIG_DIR, confFiles = POOF_CONFIG_FILES):
                     print('  > special dir %s not deleted' % localDir)
                 else:
                     die('%s while removing %s' % (error, os.path.join(localDir, dirItem)), 5)
-        else:
+        elif nukeLocal:
             poofDir = localDir
 
     if toCloud and poofDir:
@@ -284,6 +285,10 @@ def upload(confDir = POOF_CONFIG_DIR, confFiles = POOF_CONFIG_FILES):
 
 def download(confDir = POOF_CONFIG_DIR, confFiles = POOF_CONFIG_FILES):
     return _clone(False, confDir = confDir, confFiles = confFiles)
+
+
+def backup(confDir = POOF_CONFIG_DIR, confFiles = POOF_CONFIG_FILES):
+    return _clone(True, confDir = confDir, confFiles = confFiles, nukeLocal = False)
 
 
 def viewConfig(confFiles = POOF_CONFIG_FILES):
@@ -304,6 +309,8 @@ def main():
 
     if command == 'test':
         return True
+    elif command == 'backup':
+        backup()
     elif command == 'config':
         getOrCreateConfiguration()
     elif command == 'cconfig':

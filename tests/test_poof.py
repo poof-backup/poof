@@ -125,6 +125,11 @@ def test_download():
         assert download(confDir = TEST_POOF_CONF_DIR)
 
 
+def test_backup():
+    with patch('poof.backup') as backup:
+        assert backup(confDir = TEST_POOF_CONF_DIR)
+
+
 def test_viewConfig():
     # TODO: Implementation
 #     conf, cloneConf = viewConfig(confFiles = TEST_POOF_CONF_FILES)
