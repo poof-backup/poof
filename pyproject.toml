@@ -9,6 +9,7 @@ repository = "https://github.com/pr3d4t0r/poof"
 [tool.poetry.dependencies]
 python = "3.8.5"
 appdirs = "^1.4.4"
+psutil = "^5.7.2"
 
 [tool.poetry.dev-dependencies]
 pudb = "^2019.2"
