@@ -29,6 +29,7 @@ VALID_COMMANDS   = (
         'config',
         'download',
         'neuter',
+        'paths',
         'test',
         'upload',
         'verify',
@@ -294,6 +295,7 @@ def backup(confDir = POOF_CONFIG_DIR, confFiles = POOF_CONFIG_FILES):
 
 
 def viewConfig(confFiles = POOF_CONFIG_FILES):
+# TODO: EC
 #     component, status = verifyEnvironment(confFiles = confFiles)
 # 
 #     if status != PoofStatus.OK:
@@ -304,6 +306,13 @@ def viewConfig(confFiles = POOF_CONFIG_FILES):
 # 
 #     return conf, cloneConf
     raise NotImplementedError
+
+
+def outputPaths():
+    for key, item in POOF_CONFIG_FILES.items():
+        print('%s = %s' % (key, item))
+
+    return True
 
 
 def main():
@@ -324,6 +333,8 @@ def main():
             neuter()
         except Exception as e:
             die('unable to neuter poof directory at %s - %s' % (POOF_CONFIG_DIR, e), 2)
+    elif command == 'paths':
+        outputPaths()
     elif command == 'upload':
         upload()
     elif command == 'verify' or command == 'check':
