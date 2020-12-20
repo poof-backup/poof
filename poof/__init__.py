@@ -240,7 +240,7 @@ def _clone(toCloud, confDir = POOF_CONFIG_DIR, confFiles = POOF_CONFIG_FILES, nu
                     '--config',
                     confFiles['rclone-poof.conf'],
                     # TODO: Issue #20
-                    '-v',
+                    '-P',
                     'sync', 
                     localDir,
                     '%s:%s/%s' % (conf['remote'], conf['bucket'], cloudDir),
@@ -252,7 +252,7 @@ def _clone(toCloud, confDir = POOF_CONFIG_DIR, confFiles = POOF_CONFIG_FILES, nu
                     '--config',
                     confFiles['rclone-poof.conf'],
                     # TODO: Issue #20
-                    '-v',
+                    '-P',
                     'sync', 
                     cloudPath,
                     localDir,
