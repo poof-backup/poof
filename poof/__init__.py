@@ -15,6 +15,8 @@ import stat
 import subprocess
 import sys
 
+import psutil
+
 
 # *** constants ***
 
@@ -27,6 +29,7 @@ VALID_COMMANDS   = (
         'config',
         'download',
         'neuter',
+        'paths',
         'test',
         'upload',
         'verify',
@@ -236,7 +239,8 @@ def _clone(toCloud, confDir = POOF_CONFIG_DIR, confFiles = POOF_CONFIG_FILES, nu
             args = ( RCLONE_PROG,
                     '--config',
                     confFiles['rclone-poof.conf'],
-                    '-v',
+                    # TODO: Issue #20
+                    '-P',
                     'sync', 
                     localDir,
                     '%s:%s/%s' % (conf['remote'], conf['bucket'], cloudDir),
@@ -247,7 +251,8 @@ def _clone(toCloud, confDir = POOF_CONFIG_DIR, confFiles = POOF_CONFIG_FILES, nu
             args = ( RCLONE_PROG,
                     '--config',
                     confFiles['rclone-poof.conf'],
-                    '-v',
+                    # TODO: Issue #20
+                    '-P',
                     'sync', 
                     cloudPath,
                     localDir,
@@ -292,6 +297,7 @@ def backup(confDir = POOF_CONFIG_DIR, confFiles = POOF_CONFIG_FILES):
 
 
 def viewConfig(confFiles = POOF_CONFIG_FILES):
+# TODO: EC
 #     component, status = verifyEnvironment(confFiles = confFiles)
 # 
 #     if status != PoofStatus.OK:
@@ -302,6 +308,13 @@ def viewConfig(confFiles = POOF_CONFIG_FILES):
 # 
 #     return conf, cloneConf
     raise NotImplementedError
+
+
+def outputPaths():
+    for key, item in POOF_CONFIG_FILES.items():
+        print('%s = %s' % (key, item))
+
+    return True
 
 
 def main():
@@ -322,6 +335,8 @@ def main():
             neuter()
         except Exception as e:
             die('unable to neuter poof directory at %s - %s' % (POOF_CONFIG_DIR, e), 2)
+    elif command == 'paths':
+        outputPaths()
     elif command == 'upload':
         upload()
     elif command == 'verify' or command == 'check':

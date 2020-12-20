@@ -13,6 +13,7 @@ from poof import getOrCreateCloningConfiguration
 from poof import getOrCreateConfiguration
 from poof import main
 from poof import neuter
+from poof import outputPaths
 from poof import verifyEnvironment
 # from poof import viewConfig
 
@@ -155,6 +156,10 @@ def test_neuter():
     os.chmod(TEST_POOF_CONF_DIR, mode)
 
     neuter(TEST_POOF_CONF_DIR)
+
+
+def test_outputPaths():
+    assert outputPaths()
 
 
 def test_main():
