@@ -15,6 +15,7 @@ import stat
 import subprocess
 import sys
 
+import click
 import psutil
 
 
@@ -318,6 +319,7 @@ def outputPaths():
 
 
 def main():
+    # TODO: Documentation - https://click.palletsprojects.com/en/7.x/quickstart/
     command = _parseCLI()['command']
 
     if command == 'test':
