@@ -141,9 +141,13 @@ dmypy.json
 **/poof.conf
 **/pyvenv.cfg
 **/rclone-poof*
+**dummy.py
+**dummy.txt
 **rclone.conf
-*swp
+**test.py
+**test.txt
 *poof_*bak
+*swp
 
 
 # pycharm
