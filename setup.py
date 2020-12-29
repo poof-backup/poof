@@ -29,6 +29,7 @@ if '__main__' == __name__:
         description          = 'poof - instant, safe backup to a cloud drive',
         entry_points         = {
                                     'console_scripts': {
+                                        'clitest=poof.clitest:cli',
                                         'poof=poof:main',
                                     }
                                },
@@ -39,6 +40,7 @@ if '__main__' == __name__:
         name                 = open('modulename.txt').read().replace('\n', ''),
         namespace_packages   = [ ],
         packages             = find_packages(),
+        py_modules           = [ 'clitest', ],
         url                  = 'http://virustrack.live/covid',
         version              = open('version.txt').read().strip(),
     )
