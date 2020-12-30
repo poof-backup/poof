@@ -51,15 +51,29 @@ class PoofStatus(Enum):
     WARN_MISCONFIGURED      = 100
 
 
+class Configuration(object):
+    def __init__(self):
+        self.confDir = POOF_CONFIG_DIR       
+        self.confFiles = POOF_CONFIG_FILES
+
+
+globalConf = click.make_pass_decorator(Configuration, ensure = True)
+
+
 # *** functions ***
 
 @click.group()
-def main():
+@click.option('--confdir', default = POOF_CONFIG_DIR, help = 'poof configuration directory', show_default = True)
+@click.option('--poofconf', default = POOF_CONFIG_FILES['poof.conf'], help = 'poof configuration file', show_default = True)
+@click.option('--rcloneconf', default = POOF_CONFIG_FILES['rclone-poof.conf'], help = 'rclone configuration file', show_default = True)
+@globalConf
+def main(conf, confdir, poofconf, rcloneconf):
     # IMPORTANT - it must exist before declaring the functions, top-down,
     # because of the decorator.
-    pass
+    conf.confDir   = confdir
+    conf.confFiles = { 'poof.conf': poofconf, 'rclone-poof.conf': rcloneconf, }
 
-
+    
 def _initializeConfigIn(confFile, confDir):
     if not os.path.exists(confFile):
         os.makedirs(confDir, exist_ok = True)
@@ -132,21 +146,20 @@ def _nukeDirectory(path):
     return result, error
 
 
-def _config(confFiles = POOF_CONFIG_FILES, confDir = POOF_CONFIG_DIR):
-    confFile = confFiles['poof.conf']
-    _initializeConfigIn(confFile, confDir)
+@main.command()
+@globalConf
+def config(conf):
+    confFile = conf.confFiles['poof.conf']
+    _initializeConfigIn(confFile, conf.confDir)
 
     with open(confFile, 'r') as inputFile:
-        conf = json.load(inputFile)
+        actualConfiguration = json.load(inputFile)
 
-    return conf
+    return actualConfiguration
 
-@main.command()
-def config():
-    _config()
 
 def _clone(toCloud, confDir = POOF_CONFIG_DIR, confFiles = POOF_CONFIG_FILES, nukeLocal = True):
-    _, status = _verify(confFiles = confFiles)
+    _, status = verify(confFiles = confFiles)
 
     if status != PoofStatus.OK:
         die("cannot poof the files to the cloud", 4)
@@ -207,12 +220,10 @@ def _clone(toCloud, confDir = POOF_CONFIG_DIR, confFiles = POOF_CONFIG_FILES, nu
     return True
 
 
-def _backup(confDir = POOF_CONFIG_DIR, confFiles = POOF_CONFIG_FILES):
-    return _clone(True, confDir = confDir, confFiles = confFiles, nukeLocal = False)
-
 @main.command()
-def backup():
-    _backup()
+@globalConf
+def backup(conf):
+    return _clone(True, confDir = conf.confDir, confFiles = conf.confFiles, nukeLocal = False)
 
 
 @main.command()
@@ -276,7 +287,11 @@ def viewConfig(confFiles = POOF_CONFIG_FILES):
     raise NotImplementedError
 
 
-def _verify(component = RCLONE_PROG, confFiles = POOF_CONFIG_FILES, allCompoents = True):
+
+@main.command()
+@click.option('--component', default = RCLONE_PROG, help = 'Component to check', show_default = True)
+@globalConf
+def verify(conf, component, allCompoents = True):
     status = PoofStatus.OK
 
     if not shutil.which(component):
@@ -285,7 +300,7 @@ def _verify(component = RCLONE_PROG, confFiles = POOF_CONFIG_FILES, allCompoents
     print('installed %s? - %s' % (component, status))
 
     if allCompoents:
-        for component, path in confFiles.items():
+        for component, path in conf.confFiles.items():
             if not os.path.exists(path):
                 status = PoofStatus.MISSING_CONFIG_FILE
 
@@ -295,29 +310,26 @@ def _verify(component = RCLONE_PROG, confFiles = POOF_CONFIG_FILES, allCompoents
                 return component, status
 
         # heuristic:
-        conf = _config(confFiles, confDir = POOF_CONFIG_DIR)
-        if len(conf['paths']) == 1:
-            component = confFiles['poof.conf']
-            status    = PoofStatus.WARN_MISCONFIGURED
-            print('configuration %s? - %s' % (component, status))
-
-            return component, status
+#         confFile = config(conf)
+#         print('000000000')
+#         if len(confFile['paths']) == 1:
+#             component = confFile['poof.conf']
+#             status    = PoofStatus.WARN_MISCONFIGURED
+#             print('configuration %s? - %s' % (component, status))
+# 
+#             return component, status
 
         # heuristic:
-        cloningConf = _cconfig(confFiles, POOF_CONFIG_DIR)
+        cloningConf = _cconfig(conf.confFiles, POOF_CONFIG_DIR)
         for section in cloningConf.sections():
             if cloningConf.get(section, 'secret_access_key') == 'BOGUS-SECRET-KEY-USE-YOURS':
-                component = confFiles['rclone-poof.conf']
+                component = conf.confFiles['rclone-poof.conf']
                 status    = PoofStatus.WARN_MISCONFIGURED
                 print('configuration %s? - %s' % (component, status))
 
                 return component, status
 
     return None, status
-
-@main.command()
-def verify():
-    _verify()
 
 
 # @click.group()
