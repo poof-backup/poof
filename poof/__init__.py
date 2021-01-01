@@ -146,20 +146,24 @@ def _nukeDirectory(path):
     return result, error
 
 
-@main.command()
-@globalConf
-def config(conf):
-    confFile = conf.confFiles['poof.conf']
-    _initializeConfigIn(confFile, conf.confDir)
+def _config(confFiles = POOF_CONFIG_FILES, confDir = POOF_CONFIG_DIR):
+    confFile = confFiles['poof.conf']
+    _initializeConfigIn(confFile, confDir)
 
     with open(confFile, 'r') as inputFile:
         actualConfiguration = json.load(inputFile)
 
     return actualConfiguration
+    
+@main.command()
+@globalConf
+def config(conf):
+    return _config(conf.confFiles, conf.confDir)
 
 
 def _clone(toCloud, confDir = POOF_CONFIG_DIR, confFiles = POOF_CONFIG_FILES, nukeLocal = True):
-    _, status = verify(confFiles = confFiles)
+#     _, status = verify(confFiles = confFiles)
+    _, status = _verify(conf)
 
     if status != PoofStatus.OK:
         die("cannot poof the files to the cloud", 4)
@@ -223,6 +227,11 @@ def _clone(toCloud, confDir = POOF_CONFIG_DIR, confFiles = POOF_CONFIG_FILES, nu
 @main.command()
 @globalConf
 def backup(conf):
+    """
+Backup to remote without wiping out the local data
+"""
+    print(conf.confDir)
+    print(conf.confFiles)
     return _clone(True, confDir = conf.confDir, confFiles = conf.confFiles, nukeLocal = False)
 
 
@@ -288,10 +297,7 @@ def viewConfig(confFiles = POOF_CONFIG_FILES):
 
 
 
-@main.command()
-@click.option('--component', default = RCLONE_PROG, help = 'Component to check', show_default = True)
-@globalConf
-def verify(conf, component, allCompoents = True):
+def _verify(component, confFiles = POOF_CONFIG_FILES, allComponents = True):
     status = PoofStatus.OK
 
     if not shutil.which(component):
@@ -299,8 +305,8 @@ def verify(conf, component, allCompoents = True):
 
     print('installed %s? - %s' % (component, status))
 
-    if allCompoents:
-        for component, path in conf.confFiles.items():
+    if allComponents:
+        for component, path in confFiles.items():
             if not os.path.exists(path):
                 status = PoofStatus.MISSING_CONFIG_FILE
 
@@ -310,26 +316,31 @@ def verify(conf, component, allCompoents = True):
                 return component, status
 
         # heuristic:
-#         confFile = config(conf)
-#         print('000000000')
-#         if len(confFile['paths']) == 1:
-#             component = confFile['poof.conf']
-#             status    = PoofStatus.WARN_MISCONFIGURED
-#             print('configuration %s? - %s' % (component, status))
-# 
-#             return component, status
+        poofConf = _config(confFiles, POOF_CONFIG_DIR)
+        if len(poofConf['paths']) == 1:
+            component = poofConf['poof.conf']
+            status    = PoofStatus.WARN_MISCONFIGURED
+            print('configuration %s? - %s' % (component, status))
+
+            return component, status
 
         # heuristic:
-        cloningConf = _cconfig(conf.confFiles, POOF_CONFIG_DIR)
+        cloningConf = _cconfig(confFiles, POOF_CONFIG_DIR)
         for section in cloningConf.sections():
             if cloningConf.get(section, 'secret_access_key') == 'BOGUS-SECRET-KEY-USE-YOURS':
-                component = conf.confFiles['rclone-poof.conf']
+                component = confFiles['rclone-poof.conf']
                 status    = PoofStatus.WARN_MISCONFIGURED
                 print('configuration %s? - %s' % (component, status))
 
                 return component, status
 
     return None, status
+
+@main.command()
+@click.option('--component', default = RCLONE_PROG, help = 'Component to check', show_default = True)
+@globalConf
+def verify(conf, component, allComponents = True):
+    return _verify(component, conf.confFiles, allComponents)
 
 
 # @click.group()
