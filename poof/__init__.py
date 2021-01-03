@@ -6,7 +6,6 @@ from enum import Enum
 
 from appdirs import AppDirs
 
-import argparse
 import configparser
 import json
 import shutil
@@ -15,7 +14,7 @@ import stat
 import subprocess
 import sys
 
-import psutil
+import click
 
 
 # *** constants ***
@@ -23,23 +22,6 @@ import psutil
 RCLONE_PROG      = 'rclone'
 RCLONE_PROG_TEST = 'ls' # a program we know MUST exist to the which command
 SPECIAL_DIRS     = ( 'Downloads', 'Documents' )
-VALID_COMMANDS   = ( 
-        'backup',
-        'cconfig',
-        'config',
-        'download',
-        'neuter',
-        'paths',
-        'test',
-        'upload',
-        'verify',
-        'view',
-    )
-
-EPILOG = """
-%s must be available in PATH and configured, otherwise there's no way to
-trasnfer the files to/from the cloud.
-""" % RCLONE_PROG
 
 # -------------------- 
 
@@ -63,25 +45,29 @@ class PoofStatus(Enum):
     WARN_MISCONFIGURED      = 100
 
 
+class Configuration(object):
+    def __init__(self):
+        self.confDir = POOF_CONFIG_DIR       
+        self.confFiles = POOF_CONFIG_FILES
+
+
+globalConf = click.make_pass_decorator(Configuration, ensure = True)
+
+
 # *** functions ***
 
-def _parseCLI():
-    config = dict()
-    parser = argparse.ArgumentParser()
+@click.group()
+@click.option('--confdir', default = POOF_CONFIG_DIR, help = 'poof configuration directory', show_default = True)
+@click.option('--poofconf', default = POOF_CONFIG_FILES['poof.conf'], help = 'poof configuration file', show_default = True)
+@click.option('--rcloneconf', default = POOF_CONFIG_FILES['rclone-poof.conf'], help = 'rclone configuration file', show_default = True)
+@globalConf
+def main(conf, confdir, poofconf, rcloneconf):
+    # IMPORTANT - it must exist before declaring the functions, top-down,
+    # because of the decorator.
+    conf.confDir   = confdir
+    conf.confFiles = { 'poof.conf': poofconf, 'rclone-poof.conf': rcloneconf, }
 
-    parser.add_argument('command', type=str, help = '|'.join(VALID_COMMANDS))
-
-    args = parser.parse_args()
     
-    config['command'] = args.command
-
-    if config['command'] not in VALID_COMMANDS:
-        # TODO: Define a cleaner exit here.
-        raise NotImplementedError
-
-    return config
-
-
 def _initializeConfigIn(confFile, confDir):
     if not os.path.exists(confFile):
         os.makedirs(confDir, exist_ok = True)
@@ -135,78 +121,10 @@ def _initializeCloningConfigIn(confFile, confDir):
         os.chmod(confFile, stat.S_IRUSR | stat.S_IWUSR)
 
 
-def getOrCreateConfiguration(confFiles = POOF_CONFIG_FILES, confDir = POOF_CONFIG_DIR):
-    confFile = confFiles['poof.conf']
-    _initializeConfigIn(confFile, confDir)
-
-    with open(confFile, 'r') as inputFile:
-        conf = json.load(inputFile)
-
-    return conf
-
-
-def getOrCreateCloningConfiguration(confFiles = POOF_CONFIG_FILES, confDir = POOF_CONFIG_DIR): 
-    confFile = confFiles['rclone-poof.conf']
-    _initializeCloningConfigIn(confFile, confDir)
-
-    cloningConf = configparser.ConfigParser()
-    with open(confFile, 'r') as inputFile:
-        cloningConf.read_file(inputFile)
-
-    return cloningConf
-
-
-def verifyEnvironment(component = RCLONE_PROG, confFiles = POOF_CONFIG_FILES, allCompoents = True):
-    status = PoofStatus.OK
-
-    if not shutil.which(component):
-        return component, PoofStatus.MISSING_CLONING_PROGRAM
-
-    print('installed %s? - %s' % (component, status))
-
-    if allCompoents:
-        for component, path in confFiles.items():
-            if not os.path.exists(path):
-                status = PoofStatus.MISSING_CONFIG_FILE
-
-            print('exists %s? - %s' % (component, status))
-
-            if status != PoofStatus.OK:
-                return component, status
-
-        # heuristic:
-        conf = getOrCreateConfiguration(confFiles, confDir = POOF_CONFIG_DIR)
-        if len(conf['paths']) == 1:
-            component = confFiles['poof.conf']
-            status    = PoofStatus.WARN_MISCONFIGURED
-            print('configuration %s? - %s' % (component, status))
-
-            return component, status
-
-        # heuristic:
-        cloningConf = getOrCreateCloningConfiguration(confFiles, POOF_CONFIG_DIR)
-        for section in cloningConf.sections():
-            if cloningConf.get(section, 'secret_access_key') == 'BOGUS-SECRET-KEY-USE-YOURS':
-                component = confFiles['rclone-poof.conf']
-                status    = PoofStatus.WARN_MISCONFIGURED
-                print('configuration %s? - %s' % (component, status))
-
-                return component, status
-
-    return None, status
-
-
 def die(message, exitCode = 0):
     print(message)
     if exitCode:
         sys.exit(exitCode)
-
-
-def neuter(confDir = POOF_CONFIG_DIR):
-    try:
-        shutil.rmtree(confDir)
-    except FileNotFoundError:
-        pass  # Already not here
 
 
 def _nukeDirectory(path):
@@ -222,13 +140,31 @@ def _nukeDirectory(path):
     return result, error
 
 
+def _config(confFiles = POOF_CONFIG_FILES, confDir = POOF_CONFIG_DIR):
+    confFile = confFiles['poof.conf']
+    _initializeConfigIn(confFile, confDir)
+
+    with open(confFile, 'r') as inputFile:
+        actualConfiguration = json.load(inputFile)
+
+    return actualConfiguration
+    
+@main.command()
+@globalConf
+def config(conf):
+    """
+Ensure that the poof.conf file exists;  creates it if not present.
+"""
+    return _config(conf.confFiles, conf.confDir)
+
+
 def _clone(toCloud, confDir = POOF_CONFIG_DIR, confFiles = POOF_CONFIG_FILES, nukeLocal = True):
-    _, status = verifyEnvironment(confFiles = confFiles)
+    _, status = _verify(confFiles = confFiles)
 
     if status != PoofStatus.OK:
         die("cannot poof the files to the cloud", 4)
 
-    conf    = getOrCreateConfiguration()
+    conf    = _config(confFiles = confFiles)
     poofDir = None
 
     for localDir, cloudDir in conf['paths'].items():
@@ -239,7 +175,6 @@ def _clone(toCloud, confDir = POOF_CONFIG_DIR, confFiles = POOF_CONFIG_FILES, nu
             args = ( RCLONE_PROG,
                     '--config',
                     confFiles['rclone-poof.conf'],
-                    # TODO: Issue #20
                     '-P',
                     'sync', 
                     localDir,
@@ -251,7 +186,6 @@ def _clone(toCloud, confDir = POOF_CONFIG_DIR, confFiles = POOF_CONFIG_FILES, nu
             args = ( RCLONE_PROG,
                     '--config',
                     confFiles['rclone-poof.conf'],
-                    # TODO: Issue #20
                     '-P',
                     'sync', 
                     cloudPath,
@@ -279,73 +213,129 @@ def _clone(toCloud, confDir = POOF_CONFIG_DIR, confFiles = POOF_CONFIG_FILES, nu
             poofDir = localDir
 
     if toCloud and poofDir:
-        neuter(confDir)
+        _neuter(confDir)
 
     return True
 
 
-def upload(confDir = POOF_CONFIG_DIR, confFiles = POOF_CONFIG_FILES):
-    return _clone(True, confDir = confDir, confFiles = confFiles)
+@main.command()
+@globalConf
+def backup(conf):
+    """
+Backup to remote without wiping out the local data.
+"""
+    return _clone(True, confDir = conf.confDir, confFiles = conf.confFiles, nukeLocal = False)
 
 
-def download(confDir = POOF_CONFIG_DIR, confFiles = POOF_CONFIG_FILES):
-    return _clone(False, confDir = confDir, confFiles = confFiles)
+@main.command()
+@globalConf
+def download(conf):
+    """
+Download the files from the cloud and set them in their corresponding
+directories.
+"""
+    return _clone(False, confDir = conf.confDir, confFiles = conf.confFiles)
 
 
-def backup(confDir = POOF_CONFIG_DIR, confFiles = POOF_CONFIG_FILES):
-    return _clone(True, confDir = confDir, confFiles = confFiles, nukeLocal = False)
-
-
-def viewConfig(confFiles = POOF_CONFIG_FILES):
-# TODO: EC
-#     component, status = verifyEnvironment(confFiles = confFiles)
-# 
-#     if status != PoofStatus.OK:
-#         return component, status
-# 
-#     conf = getOrCreateConfiguration(confFiles = confFiles)
-#     cloneConf = getOrCreateCloningConfiguration(confFiles = confFiles)
-# 
-#     return conf, cloneConf
-    raise NotImplementedError
-
-
-def outputPaths():
+@main.command()
+def paths():
+    """
+Output the platform-specific paths to the poof configuration files.
+"""
     for key, item in POOF_CONFIG_FILES.items():
         print('%s = %s' % (key, item))
 
     return True
 
 
-def main():
-    command = _parseCLI()['command']
-
-    if command == 'test':
-        return True
-    elif command == 'backup':
-        backup()
-    elif command == 'config':
-        getOrCreateConfiguration()
-    elif command == 'cconfig':
-        getOrCreateCloningConfiguration()
-    elif command == 'download':
-        download()
-    elif command == 'neuter':
-        try:
-            neuter()
-        except Exception as e:
-            die('unable to neuter poof directory at %s - %s' % (POOF_CONFIG_DIR, e), 2)
-    elif command == 'paths':
-        outputPaths()
-    elif command == 'upload':
-        upload()
-    elif command == 'verify' or command == 'check':
-        if verifyEnvironment() != (None, PoofStatus.OK):
-            die(EPILOG, 1)
+def _neuter(confDir = POOF_CONFIG_DIR):
+    try:
+        shutil.rmtree(confDir)
+    except FileNotFoundError:
+        pass  # Already not here
 
 
-# *** main ***
+@main.command()
+@globalConf
+def neuter(conf):
+    """
+Neuter this poof installation by deleting its configuration.
+"""
+    _neuter(conf.confDir)
 
-if '__main__' == __name__:
-    main()
+
+@main.command()
+@globalConf
+def upload(conf):
+    """
+Upload all the files to the cloud drive and delete the local paths.
+"""
+    return _clone(True, confDir = conf.confDir, confFiles = conf.confFiles)
+
+
+def _cconfig(confFiles = POOF_CONFIG_FILES, confDir = POOF_CONFIG_DIR): 
+    confFile = confFiles['rclone-poof.conf']
+    _initializeCloningConfigIn(confFile, confDir)
+
+    cloningConf = configparser.ConfigParser()
+    with open(confFile, 'r') as inputFile:
+        cloningConf.read_file(inputFile)
+
+    return cloningConf
+
+@main.command()
+def cconfig():
+    """
+Ensure that the rclone-poof.conf file exists; creates it if not present.
+"""
+    _cconfig()
+
+
+def _verify(component = RCLONE_PROG, confFiles = POOF_CONFIG_FILES, allComponents = True):
+    status = PoofStatus.OK
+
+    if not shutil.which(component):
+        return component, PoofStatus.MISSING_CLONING_PROGRAM
+
+    print('installed %s? - %s' % (component, status))
+
+    if allComponents:
+        for component, path in confFiles.items():
+            if not os.path.exists(path):
+                status = PoofStatus.MISSING_CONFIG_FILE
+
+            print('exists %s? - %s' % (component, status))
+
+            if status != PoofStatus.OK:
+                return component, status
+
+        # heuristic:
+        poofConf = _config(confFiles, POOF_CONFIG_DIR)
+        if len(poofConf['paths']) == 1:
+            component = poofConf['poof.conf']
+            status    = PoofStatus.WARN_MISCONFIGURED
+            print('configuration %s? - %s' % (component, status))
+
+            return component, status
+
+        # heuristic:
+        cloningConf = _cconfig(confFiles, POOF_CONFIG_DIR)
+        for section in cloningConf.sections():
+            if cloningConf.get(section, 'secret_access_key') == 'BOGUS-SECRET-KEY-USE-YOURS':
+                component = confFiles['rclone-poof.conf']
+                status    = PoofStatus.WARN_MISCONFIGURED
+                print('configuration %s? - %s' % (component, status))
+
+                return component, status
+
+    return None, status
+
+@main.command()
+@click.option('--component', default = RCLONE_PROG, help = 'Component to check', show_default = True)
+@globalConf
+def verify(conf, component, allComponents = True):
+    """
+Verify the poof and cloning tool configurations.
+"""
+    return _verify(component, conf.confFiles, allComponents)
 
