@@ -24,10 +24,6 @@ import psutil
 RCLONE_PROG      = 'rclone'
 RCLONE_PROG_TEST = 'ls' # a program we know MUST exist to the which command
 SPECIAL_DIRS     = ( 'Downloads', 'Documents' )
-EPILOG = """
-%s must be available in PATH and configured, otherwise there's no way to
-trasnfer the files to/from the cloud.
-""" % RCLONE_PROG
 
 # -------------------- 
 
@@ -158,17 +154,19 @@ def _config(confFiles = POOF_CONFIG_FILES, confDir = POOF_CONFIG_DIR):
 @main.command()
 @globalConf
 def config(conf):
+    """
+Ensure that the poof.conf file exists;  creates it if not present.
+"""
     return _config(conf.confFiles, conf.confDir)
 
 
 def _clone(toCloud, confDir = POOF_CONFIG_DIR, confFiles = POOF_CONFIG_FILES, nukeLocal = True):
-#     _, status = verify(confFiles = confFiles)
-    _, status = _verify(conf)
+    _, status = _verify(confFiles = confFiles)
 
     if status != PoofStatus.OK:
         die("cannot poof the files to the cloud", 4)
 
-    conf    = _config()
+    conf    = _config(confFiles = confFiles)
     poofDir = None
 
     for localDir, cloudDir in conf['paths'].items():
@@ -179,7 +177,6 @@ def _clone(toCloud, confDir = POOF_CONFIG_DIR, confFiles = POOF_CONFIG_FILES, nu
             args = ( RCLONE_PROG,
                     '--config',
                     confFiles['rclone-poof.conf'],
-                    # TODO: Issue #20
                     '-P',
                     'sync', 
                     localDir,
@@ -191,7 +188,6 @@ def _clone(toCloud, confDir = POOF_CONFIG_DIR, confFiles = POOF_CONFIG_FILES, nu
             args = ( RCLONE_PROG,
                     '--config',
                     confFiles['rclone-poof.conf'],
-                    # TODO: Issue #20
                     '-P',
                     'sync', 
                     cloudPath,
@@ -219,7 +215,7 @@ def _clone(toCloud, confDir = POOF_CONFIG_DIR, confFiles = POOF_CONFIG_FILES, nu
             poofDir = localDir
 
     if toCloud and poofDir:
-        neuter(confDir)
+        _neuter(confDir)
 
     return True
 
@@ -228,43 +224,55 @@ def _clone(toCloud, confDir = POOF_CONFIG_DIR, confFiles = POOF_CONFIG_FILES, nu
 @globalConf
 def backup(conf):
     """
-Backup to remote without wiping out the local data
+Backup to remote without wiping out the local data.
 """
-    print(conf.confDir)
-    print(conf.confFiles)
     return _clone(True, confDir = conf.confDir, confFiles = conf.confFiles, nukeLocal = False)
 
 
 @main.command()
-def download(confDir = POOF_CONFIG_DIR, confFiles = POOF_CONFIG_FILES):
-    print('download in progress!')
-    return False
-#     return _clone(False, confDir = confDir, confFiles = confFiles)
+@globalConf
+def download(conf):
+    """
+Download the files from the cloud and set them in their corresponding
+directories.
+"""
+    return _clone(False, confDir = conf.confDir, confFiles = conf.confFiles)
 
 
 @main.command()
 def paths():
+    """
+Output the platform-specific paths to the poof configuration files.
+"""
     for key, item in POOF_CONFIG_FILES.items():
         print('%s = %s' % (key, item))
 
     return True
 
 
-@main.command()
-def neuter(confDir = POOF_CONFIG_DIR):
-#     try:
-#         shutil.rmtree(confDir)
-#     except FileNotFoundError:
-#         pass  # Already not here
-    print('neuter in progress!')
-    return False
+def _neuter(confDir = POOF_CONFIG_DIR):
+    try:
+        shutil.rmtree(confDir)
+    except FileNotFoundError:
+        pass  # Already not here
 
 
 @main.command()
-def upload(confDir = POOF_CONFIG_DIR, confFiles = POOF_CONFIG_FILES):
-    print('upload in progress!')
-    return False
-#     return _clone(True, confDir = confDir, confFiles = confFiles)
+@globalConf
+def neuter(conf):
+    """
+Neuter this poof installation by deleting its configuration.
+"""
+    _neuter(conf.confDir)
+
+
+@main.command()
+@globalConf
+def upload(conf):
+    """
+Upload all the files to the cloud drive and delete the local paths.
+"""
+    return _clone(True, confDir = conf.confDir, confFiles = conf.confFiles)
 
 
 def _cconfig(confFiles = POOF_CONFIG_FILES, confDir = POOF_CONFIG_DIR): 
@@ -279,25 +287,13 @@ def _cconfig(confFiles = POOF_CONFIG_FILES, confDir = POOF_CONFIG_DIR):
 
 @main.command()
 def cconfig():
+    """
+Ensure that the rclone-poof.conf file exists; creates it if not present.
+"""
     _cconfig()
 
 
-def viewConfig(confFiles = POOF_CONFIG_FILES):
-# TODO: EC
-#     component, status = verifyEnvironment(confFiles = confFiles)
-# 
-#     if status != PoofStatus.OK:
-#         return component, status
-# 
-#     conf = config(confFiles = confFiles)
-#     cloneConf = cconf(confFiles = confFiles)
-# 
-#     return conf, cloneConf
-    raise NotImplementedError
-
-
-
-def _verify(component, confFiles = POOF_CONFIG_FILES, allComponents = True):
+def _verify(component = RCLONE_PROG, confFiles = POOF_CONFIG_FILES, allComponents = True):
     status = PoofStatus.OK
 
     if not shutil.which(component):
@@ -340,40 +336,8 @@ def _verify(component, confFiles = POOF_CONFIG_FILES, allComponents = True):
 @click.option('--component', default = RCLONE_PROG, help = 'Component to check', show_default = True)
 @globalConf
 def verify(conf, component, allComponents = True):
+    """
+Verify the poof and cloning tool configurations.
+"""
     return _verify(component, conf.confFiles, allComponents)
-
-
-# @click.group()
-# def main():
-#     pass
-#     command = _parseCLI()['command']
-# 
-#     if command == 'test':
-#         return True
-#     elif command == 'backup':
-#         backup()
-#     elif command == 'config':
-#         getOrCreateConfiguration()
-#     elif command == 'cconfig':
-#         getOrCreateCloningConfiguration()
-#     elif command == 'download':
-#         download()
-#     elif command == 'neuter':
-#         try:
-#             neuter()
-#         except Exception as e:
-#             die('unable to neuter poof directory at %s - %s' % (POOF_CONFIG_DIR, e), 2)
-#     elif command == 'paths':
-#         outputPaths()
-#     elif command == 'upload':
-#         upload()
-#     elif command == 'verify' or command == 'check':
-#         if verifyEnvironment() != (None, PoofStatus.OK):
-#             die(EPILOG, 1)
-
-
-# *** main ***
-
-# if '__main__' == __name__:
-#     main()
 
