@@ -6,7 +6,6 @@ from enum import Enum
 
 from appdirs import AppDirs
 
-import argparse
 import configparser
 import json
 import shutil
@@ -16,7 +15,6 @@ import subprocess
 import sys
 
 import click
-import psutil
 
 
 # *** constants ***

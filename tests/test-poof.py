@@ -4,18 +4,17 @@
 
 from unittest.mock import patch
 
+from click.testing import CliRunner
+
 from poof import PoofStatus
 from poof import RCLONE_PROG_TEST
+from poof import _cconfig
+from poof import _config
+from poof import _neuter
 from poof import _nukeDirectory
-from poof import _parseCLI
+from poof import _verify
 from poof import die
-from poof import getOrCreateCloningConfiguration
-from poof import getOrCreateConfiguration
-from poof import main
-from poof import neuter
-from poof import outputPaths
-from poof import verifyEnvironment
-# from poof import viewConfig
+from poof import paths
 
 import copy
 import json
@@ -42,22 +41,6 @@ TEST_POOF_CONF_FILES = {
 
 # *** tests ***
 
-def test__parseCLI():
-    config = _parseCLI()
-    assert config['command'] == 'test'
-
-    del(sys.argv[1])
-
-    sys.argv.append('bogus')
-
-    with pytest.raises(NotImplementedError):
-        config = _parseCLI()
-
-    del(sys.argv[1])
-
-    sys.argv.append('test')
-
-
 def _nukeTestConfigDir():
         try:
             shutil.rmtree(TEST_POOF_CONF_DIR)
@@ -65,34 +48,34 @@ def _nukeTestConfigDir():
             pass
 
 
-def test_getOrCreateConfiguration():
+def test__config():
     poofConfFile = TEST_POOF_CONF_FILES['poof.conf']
 
     if os.path.exists(poofConfFile):
         _nukeTestConfigDir()
 
-    poofConf = getOrCreateConfiguration(TEST_POOF_CONF_FILES, TEST_POOF_CONF_DIR)
+    poofConf = _config(TEST_POOF_CONF_FILES, TEST_POOF_CONF_DIR)
 
     assert poofConf['confFile'] == poofConfFile
     assert TEST_POOF_CONF_DIR in poofConf['paths']
 
 
-def test_getOrCreateCloningConfiguration():
-    conf = getOrCreateCloningConfiguration(TEST_POOF_CONF_FILES, TEST_POOF_CONF_DIR)
+def test__cconfig():
+    conf = _cconfig(TEST_POOF_CONF_FILES, TEST_POOF_CONF_DIR)
 
     assert conf.get('my-poof', 'type') == TEST_CLOUD_TYPE
 
 
-def test_verifyEnvironment():
+def test__verify():
     bogusCloningProgram = 'bogusxxxxx1213'
     _nukeTestConfigDir()
 
-    assert verifyEnvironment(component = bogusCloningProgram, confFiles = TEST_POOF_CONF_FILES) == (bogusCloningProgram, PoofStatus.MISSING_CLONING_PROGRAM)
-    assert verifyEnvironment(component = RCLONE_PROG_TEST, confFiles = TEST_POOF_CONF_FILES, allCompoents = False) == (None, PoofStatus.OK)
-    assert verifyEnvironment(component = RCLONE_PROG_TEST, confFiles = TEST_POOF_CONF_FILES) == ('poof.conf', PoofStatus.MISSING_CONFIG_FILE)
-    poofConf = getOrCreateConfiguration(TEST_POOF_CONF_FILES, TEST_POOF_CONF_DIR) 
-    assert verifyEnvironment(component = RCLONE_PROG_TEST, confFiles = TEST_POOF_CONF_FILES) == ('rclone-poof.conf', PoofStatus.MISSING_CONFIG_FILE)
-    getOrCreateCloningConfiguration(TEST_POOF_CONF_FILES, TEST_POOF_CONF_DIR)
+    assert _verify(component = bogusCloningProgram, confFiles = TEST_POOF_CONF_FILES) == (bogusCloningProgram, PoofStatus.MISSING_CLONING_PROGRAM)
+    assert _verify(component = RCLONE_PROG_TEST, confFiles = TEST_POOF_CONF_FILES, allComponents = False) == (None, PoofStatus.OK)
+    assert _verify(component = RCLONE_PROG_TEST, confFiles = TEST_POOF_CONF_FILES) == ('poof.conf', PoofStatus.MISSING_CONFIG_FILE)
+    poofConf = _config(TEST_POOF_CONF_FILES, TEST_POOF_CONF_DIR) 
+    assert _verify(component = RCLONE_PROG_TEST, confFiles = TEST_POOF_CONF_FILES) == ('rclone-poof.conf', PoofStatus.MISSING_CONFIG_FILE)
+    _cconfig(TEST_POOF_CONF_FILES, TEST_POOF_CONF_DIR)
 
     assert len(poofConf['paths']) == 1 # Only for testing - one entry, itself
 
@@ -100,9 +83,7 @@ def test_verifyEnvironment():
     with open(TEST_POOF_CONF_FILES['poof.conf'], 'w') as outputFile:
         json.dump(poofConf, outputFile)
 
-    assert verifyEnvironment(component = RCLONE_PROG_TEST, confFiles = TEST_POOF_CONF_FILES) == (TEST_POOF_CONF_FILES['rclone-poof.conf'], PoofStatus.WARN_MISCONFIGURED)
-    # TODO: All failure cases tested, normal op is ignored for now.
-    # assert verifyEnvironment(component = RCLONE_PROG_TEST, confFiles = TEST_POOF_CONF_FILES) == (None, PoofStatus.OK)
+    assert _verify(component = RCLONE_PROG_TEST, confFiles = TEST_POOF_CONF_FILES) == (TEST_POOF_CONF_FILES['rclone-poof.conf'], PoofStatus.WARN_MISCONFIGURED)
 
 
 def test_die():
@@ -131,13 +112,6 @@ def test_backup():
         assert backup(confDir = TEST_POOF_CONF_DIR)
 
 
-def test_viewConfig():
-    # TODO: Implementation
-#     conf, cloneConf = viewConfig(confFiles = TEST_POOF_CONF_FILES)
-#     raise NotImplementedError
-    pass
-
-
 def test__nukeDirectory():
     bogusDir = os.path.join(TEST_POOF_CONF_DIR, 'bogusxxxxx1213')
     status, error = _nukeDirectory(bogusDir)
@@ -148,26 +122,16 @@ def test__nukeDirectory():
     assert status
 
 
-def test_neuter():
+def test__neuter():
     mode = os.stat(TEST_POOF_CONF_DIR).st_mode
     os.chmod(TEST_POOF_CONF_DIR, 0)
     with pytest.raises(Exception):
-        neuter(TEST_POOF_CONF_DIR)
+        _neuter(TEST_POOF_CONF_DIR)
     os.chmod(TEST_POOF_CONF_DIR, mode)
 
-    neuter(TEST_POOF_CONF_DIR)
+    _neuter(TEST_POOF_CONF_DIR)
 
 
-def test_outputPaths():
-    assert outputPaths()
-
-
-def test_main():
-    assert main() == True
-
-
-# test_getOrCreateConfiguration()
-# test_getOrCreateCloningConfiguration()
-# test_verifyEnvironment()
-# test_viewConfig()
+def test_paths():
+    assert CliRunner().invoke(paths)
 
