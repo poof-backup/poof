@@ -122,7 +122,7 @@ def _initializeCloningConfigIn(confFile, confDir):
 
 
 def die(message, exitCode = 0):
-    print(message)
+    click.echo(click.style(message, fg='red'))
     if exitCode:
         sys.exit(exitCode)
 
@@ -176,6 +176,7 @@ def _clone(toCloud, confDir = POOF_CONFIG_DIR, confFiles = POOF_CONFIG_FILES, nu
                     '--config',
                     confFiles['rclone-poof.conf'],
                     '-P',
+                    '-L',
                     'sync', 
                     localDir,
                     '%s:%s/%s' % (conf['remote'], conf['bucket'], cloudDir),
@@ -193,7 +194,7 @@ def _clone(toCloud, confDir = POOF_CONFIG_DIR, confFiles = POOF_CONFIG_FILES, nu
                   )
             processingItem = cloudPath
 
-        print('\nprocessing: %s' % processingItem)
+        click.secho('\nprocessing: %s' % processingItem)
         result = subprocess.run(args)
 
         try:
@@ -206,7 +207,7 @@ def _clone(toCloud, confDir = POOF_CONFIG_DIR, confFiles = POOF_CONFIG_FILES, nu
             if not status:
                 dirItem = os.path.split(error.filename)[1].replace(os.sep, '')
                 if dirItem in SPECIAL_DIRS:
-                    print('  > special dir %s not deleted' % localDir)
+                    click.secho('  > special dir %s not deleted' % localDir, fg = 'bright_cyan')
                 else:
                     die('%s while removing %s' % (error, os.path.join(localDir, dirItem)), 5)
         elif nukeLocal:
@@ -224,7 +225,11 @@ def backup(conf):
     """
 Backup to remote without wiping out the local data.
 """
-    return _clone(True, confDir = conf.confDir, confFiles = conf.confFiles, nukeLocal = False)
+    click.echo(click.style('BACKUP IN PROGRESS - PLEASE DO NOT INTERRUPT', fg='yellow'))
+    outcome = _clone(True, confDir = conf.confDir, confFiles = conf.confFiles, nukeLocal = False)
+    click.echo(click.style('BACKUP COMPLETE', fg='green'))
+
+    return outcome
 
 
 @main.command()
@@ -234,7 +239,11 @@ def download(conf):
 Download the files from the cloud and set them in their corresponding
 directories.
 """
-    return _clone(False, confDir = conf.confDir, confFiles = conf.confFiles)
+    click.echo(click.style('DOWNLOAD SYNC IN PROGRESS - PLEASE DO NOT INTERRUPT', fg='yellow'))
+    outcome = _clone(False, confDir = conf.confDir, confFiles = conf.confFiles)
+    click.echo(click.style('DOWNLOAD COMPLETE', fg='green'))
+
+    return outcome
 
 
 @main.command()
@@ -243,7 +252,7 @@ def paths():
 Output the platform-specific paths to the poof configuration files.
 """
     for key, item in POOF_CONFIG_FILES.items():
-        print('%s = %s' % (key, item))
+        click.echo('%s = %s' % (key, item))
 
     return True
 
@@ -270,7 +279,11 @@ def upload(conf):
     """
 Upload all the files to the cloud drive and delete the local paths.
 """
-    return _clone(True, confDir = conf.confDir, confFiles = conf.confFiles)
+    click.echo(click.style('UPLOAD SYNC IN PROGRESS - PLEASE DO NOT INTERRUPT', fg='yellow'))
+    outcome = _clone(True, confDir = conf.confDir, confFiles = conf.confFiles)
+    click.echo(click.style('UPLOAD COMPLETE', fg='green'))
+
+    return outcome
 
 
 def _cconfig(confFiles = POOF_CONFIG_FILES, confDir = POOF_CONFIG_DIR): 
@@ -297,14 +310,14 @@ def _verify(component = RCLONE_PROG, confFiles = POOF_CONFIG_FILES, allComponent
     if not shutil.which(component):
         return component, PoofStatus.MISSING_CLONING_PROGRAM
 
-    print('installed %s? - %s' % (component, status))
+    click.echo('installed %s? - %s' % (component, status))
 
     if allComponents:
         for component, path in confFiles.items():
             if not os.path.exists(path):
                 status = PoofStatus.MISSING_CONFIG_FILE
 
-            print('exists %s? - %s' % (component, status))
+            click.echo('exists %s? - %s' % (component, status))
 
             if status != PoofStatus.OK:
                 return component, status
@@ -314,7 +327,7 @@ def _verify(component = RCLONE_PROG, confFiles = POOF_CONFIG_FILES, allComponent
         if len(poofConf['paths']) == 1:
             component = poofConf['poof.conf']
             status    = PoofStatus.WARN_MISCONFIGURED
-            print('configuration %s? - %s' % (component, status))
+            click.echo('configuration %s? - %s' % (component, status))
 
             return component, status
 
@@ -324,7 +337,7 @@ def _verify(component = RCLONE_PROG, confFiles = POOF_CONFIG_FILES, allComponent
             if cloningConf.get(section, 'secret_access_key') == 'BOGUS-SECRET-KEY-USE-YOURS':
                 component = confFiles['rclone-poof.conf']
                 status    = PoofStatus.WARN_MISCONFIGURED
-                print('configuration %s? - %s' % (component, status))
+                click.echo('configuration %s? - %s' % (component, status))
 
                 return component, status
 
