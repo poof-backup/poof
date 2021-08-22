@@ -2,6 +2,7 @@
 # vim: set fileencoding=utf-8:
 
 
+from datetime import datetime
 from enum import Enum
 
 from appdirs import AppDirs
@@ -21,7 +22,19 @@ import click
 
 RCLONE_PROG      = 'rclone'
 RCLONE_PROG_TEST = 'ls' # a program we know MUST exist to the which command
-SPECIAL_DIRS     = ( 'Downloads', 'Documents' )
+SPECIAL_DIRS     = (
+    'Desktop',
+    'Documents',
+    'Downloads',
+    'Movies',
+    'Music',
+    'Pictures',
+    'Public',
+    'Shared',
+    'Sites',
+    'Updates',
+    'VirtualBox VMs',
+)
 
 # -------------------- 
 
@@ -52,6 +65,7 @@ class Configuration(object):
 
 
 globalConf = click.make_pass_decorator(Configuration, ensure = True)
+_startPoof = datetime.now()
 
 
 # *** functions ***
@@ -219,6 +233,16 @@ def _clone(toCloud, confDir = POOF_CONFIG_DIR, confFiles = POOF_CONFIG_FILES, nu
     return True
 
 
+def _timeLapsed(lapsed = None):
+    if not lapsed:
+        lapsed = datetime.now()-_startPoof
+
+    hours, seconds   = divmod(lapsed.seconds, 3600)
+    minutes, seconds = divmod(seconds, 60)
+
+    return hours, minutes, seconds
+
+
 @main.command()
 @globalConf
 def backup(conf):
@@ -227,7 +251,8 @@ Backup to remote without wiping out the local data.
 """
     click.echo(click.style('BACKUP IN PROGRESS - PLEASE DO NOT INTERRUPT', fg='yellow'))
     outcome = _clone(True, confDir = conf.confDir, confFiles = conf.confFiles, nukeLocal = False)
-    click.echo(click.style('BACKUP COMPLETE', fg='green'))
+    h, m, s = _timeLapsed()
+    click.echo(click.style(('BACKUP COMPLETED in %d:%02d:%02d' % (h, m, s)), fg='green'))
 
     return outcome
 
@@ -241,7 +266,8 @@ directories.
 """
     click.echo(click.style('DOWNLOAD SYNC IN PROGRESS - PLEASE DO NOT INTERRUPT', fg='yellow'))
     outcome = _clone(False, confDir = conf.confDir, confFiles = conf.confFiles)
-    click.echo(click.style('DOWNLOAD COMPLETE', fg='green'))
+    h, m, s = _timeLapsed()
+    click.echo(click.style(('DOWNLOAD COMPLETED in %d:%02d:%02d' % (h, m, s)), fg='green'))
 
     return outcome
 
@@ -281,7 +307,8 @@ Upload all the files to the cloud drive and delete the local paths.
 """
     click.echo(click.style('UPLOAD SYNC IN PROGRESS - PLEASE DO NOT INTERRUPT', fg='yellow'))
     outcome = _clone(True, confDir = conf.confDir, confFiles = conf.confFiles)
-    click.echo(click.style('UPLOAD COMPLETE', fg='green'))
+    h, m, s = _timeLapsed()
+    click.echo(click.style(('UPLOAD COMPLETED in %d:%02d:%02d' % (h, m, s)), fg='green'))
 
     return outcome
 
@@ -295,6 +322,7 @@ def _cconfig(confFiles = POOF_CONFIG_FILES, confDir = POOF_CONFIG_DIR):
         cloningConf.read_file(inputFile)
 
     return cloningConf
+
 
 @main.command()
 def cconfig():
