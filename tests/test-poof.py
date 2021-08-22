@@ -2,6 +2,7 @@
 # vim: set fileencoding=utf-8:
 
 
+from datetime import timedelta
 from unittest.mock import patch
 
 from click.testing import CliRunner
@@ -12,6 +13,7 @@ from poof import _cconfig
 from poof import _config
 from poof import _neuter
 from poof import _nukeDirectory
+from poof import _timeLapsed
 from poof import _verify
 from poof import die
 from poof import paths
@@ -64,6 +66,26 @@ def test__cconfig():
     conf = _cconfig(TEST_POOF_CONF_FILES, TEST_POOF_CONF_DIR)
 
     assert conf.get('my-poof', 'type') == TEST_CLOUD_TYPE
+
+
+def test__timeLapsed():
+    testTime = timedelta(hours = 1, minutes = 1, seconds = 1)
+    hours, minutes, seconds = _timeLapsed(testTime)
+    assert hours == 1
+    assert minutes == 1
+    assert seconds == 1
+
+    testTime = timedelta(hours = 0, minutes = 1, seconds = 1)
+    hours, minutes, seconds = _timeLapsed(testTime)
+    assert hours == 0
+    assert minutes == 1
+    assert seconds == 1
+
+    testTime = timedelta(hours = 1, minutes = 0, seconds = 1)
+    hours, minutes, seconds = _timeLapsed(testTime)
+    assert hours == 1
+    assert minutes == 0
+    assert seconds == 1
 
 
 def test__verify():

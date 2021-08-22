@@ -29,7 +29,6 @@ if '__main__' == __name__:
         description          = 'poof - instant, safe backup to a cloud drive',
         entry_points         = {
                                     'console_scripts': {
-                                        'clitest=poof.clitest:cli',
                                         'poof=poof:main',
                                     }
                                },

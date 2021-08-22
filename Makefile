@@ -39,6 +39,11 @@ install:
 	pip list | awk 'NR < 3 { print; } /$(MODULE)/'
 
 
+libupdate:
+	pip install -U pip
+	pip install -Ur $(REQUIREMENTS)
+
+
 module:
 	pip install -r $(REQUIREMENTS)
 	python setup.py bdist_wheel
