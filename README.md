@@ -19,14 +19,24 @@ tools, discussed in the documentation.  For details, see the [`poof` GitHub
 repository](https://github.com/poof-backup/poof)._
 
 
-## Workflow
-
-### One-time set up
+## One-time set up
 
 1. Install `poof`
 1. Install `rclone`
 1. Configure `poof`
 1. Configure `rclone`
+
+
+### Install `poof`
+
+Use `pip` or `pip3` to install in the current Python scope (system or virtual
+environment):
+
+```
+pip3 install poof
+```
+
+### Configuration
 
 The `poof` configuration for `rclone` is specific to this tool.  `rclone` users
 may have other configurations that in no way conflict with `poof` and vice
@@ -166,5 +176,5 @@ a more reliable mechanism than building that logic in `poof`.
 
 
 ---
-&#169; the poof! contributors
+&#169; the poof contributors
 
