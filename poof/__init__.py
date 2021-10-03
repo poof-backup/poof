@@ -93,7 +93,7 @@ def _initializeConfigIn(confFile, confDir):
                 'bucket': 'poofbackup',
                 'confFile': confFile,
                 'paths': paths,
-                'remote': 'poof', # rclone .INI section
+                'remote': 'my-poof', # rclone .INI section
             }
             json.dump(basicConfig, outputFile, indent = 2, sort_keys = True)
         os.chmod(confFile, stat.S_IRUSR | stat.S_IWUSR)
@@ -353,9 +353,9 @@ def _verify(component = RCLONE_PROG, confFiles = POOF_CONFIG_FILES, allComponent
         # heuristic:
         poofConf = _config(confFiles, POOF_CONFIG_DIR)
         if len(poofConf['paths']) == 1:
-            component = poofConf['poof.conf']
+            component = 'poof.conf'
             status    = PoofStatus.WARN_MISCONFIGURED
-            click.echo('configuration %s? - %s' % (component, status))
+            click.echo('configuration %s? - %s: set the poof.config cloud backup path to something other than unittest' % (component, status))
 
             return component, status
 
@@ -368,6 +368,8 @@ def _verify(component = RCLONE_PROG, confFiles = POOF_CONFIG_FILES, allComponent
                 click.echo('configuration %s? - %s' % (component, status))
 
                 return component, status
+
+        click.echo('configuration appears to be valid and has valid credentials')
 
     return None, status
 
