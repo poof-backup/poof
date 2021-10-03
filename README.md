@@ -139,7 +139,7 @@ configuration appears to be valid and has valid credentials
 ```
 
 
-### Regular backups
+## Regular backups
 
 `poof` validates its own configuration before backing up or restoring data.  It
 will fail if its own configuration or any of its required tools configurations
@@ -154,6 +154,27 @@ then removing all the local file (selected directories wipe).
 Run  `poof download` to sync the local file system with the most current files
 in the cloud drive, as needed or required.
 
+
+## Restore
+
+**Restoring data from the cloud drive is a destructive operation in the target
+file system.**  This is by design because `poof` clones and synchronizes the
+source file system to the targets.  Backups are never incremental -- they are
+considered to be "snapshots" in all cases.
+
+To restore a backup from the cloud to the local file system:
+
+1. Validate the configuration
+1. Run `poof download`
+
+The file system synchronization process may take from a few minutes to several
+hours, depending on the number of files involved, the lengt of the files, and
+the connection speed.
+
+
+## Operational security
+
+_Section under development._
 
 
 ## Requirements
