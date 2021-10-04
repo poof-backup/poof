@@ -1,0 +1,9 @@
+#!/bin/bash
+
+
+# +++ main +++
+
+mkdir -p "$HOME/Library/Application Support/poof"
+cp poof_conf.bak poof.conf
+cp rclone_conf.bak rclone.conf
+

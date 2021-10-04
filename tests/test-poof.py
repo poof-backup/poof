@@ -140,10 +140,10 @@ def test__neuter():
     mode = os.stat(TEST_POOF_CONF_DIR).st_mode
     os.chmod(TEST_POOF_CONF_DIR, 0)
     with pytest.raises(Exception):
-        _neuter(TEST_POOF_CONF_DIR)
+        _neuter(TEST_POOF_CONF_DIR, unitTest = True)
     os.chmod(TEST_POOF_CONF_DIR, mode)
 
-    _neuter(TEST_POOF_CONF_DIR)
+    _neuter(TEST_POOF_CONF_DIR, unitTest = True)
 
 
 def test_paths():
