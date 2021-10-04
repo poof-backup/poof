@@ -9,8 +9,9 @@ from appdirs import AppDirs
 
 import configparser
 import json
-import shutil
 import os
+import platform
+import shutil
 import stat
 import subprocess
 import sys
@@ -141,17 +142,40 @@ def die(message, exitCode = 0):
         sys.exit(exitCode)
 
 
-def _nukeDirectory(path):
-    result = True
+def _nukeDirectoryMac(path):
+    result = False
     error  = None
 
-    try:
-        shutil.rmtree(path)
-    except Exception as e:
-        error  = e 
-        result = False
+    if os.path.exists(path):
+        args = (
+            '/bin/rm',
+            '-Prfv',
+            path,
+        )
+        procResult = subprocess.run(args)
+
+        result = not procResult.returncode
 
     return result, error
+
+
+def _nukeDirectoryLinux(path):
+    # TODO:  https://github.com/poof-backup/poof/issues/35
+    return False
+
+
+def _nukeDirectory(path):
+    result = False
+    error  = Exception()
+
+    hostPlatform = platform.system()
+
+    if 'Darwin' == hostPlatform:
+        return _nukeDirectoryMac(path)
+    elif 'Linux' == hostPlatform:
+        return _nukeDirectoryLinux(path)
+    else:
+        return result, error
 
 
 def _config(confFiles = POOF_CONFIG_FILES, confDir = POOF_CONFIG_DIR):
@@ -219,11 +243,7 @@ def _clone(toCloud, confDir = POOF_CONFIG_DIR, confFiles = POOF_CONFIG_FILES, nu
         if toCloud and 'poof' not in localDir and nukeLocal:
             status, error = _nukeDirectory(localDir)
             if not status:
-                dirItem = os.path.split(error.filename)[1].replace(os.sep, '')
-                if dirItem in SPECIAL_DIRS:
-                    click.secho('  > special dir %s not deleted' % localDir, fg = 'bright_cyan')
-                else:
-                    die('%s while removing %s' % (error, os.path.join(localDir, dirItem)), 5)
+                click.secho('  > dir %s may be system-protected' % localDir, fg = 'bright_cyan')
         elif nukeLocal:
             poofDir = localDir
 
