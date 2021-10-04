@@ -303,11 +303,23 @@ Output the platform-specific paths to the poof configuration files.
     return True
 
 
-def _neuter(confDir = POOF_CONFIG_DIR):
+def _neuter(confDir = POOF_CONFIG_DIR, unitTest = False):
     try:
         shutil.rmtree(confDir)
     except FileNotFoundError:
         pass  # Already not here
+
+    if not unitTest:
+        try:
+            args = (
+                'pip',
+                'uninstall',
+                '-y',
+                'poof',
+            )
+            subprocess.run(args)
+        except:
+            pass # Ignore if it requires root
 
 
 @main.command()
