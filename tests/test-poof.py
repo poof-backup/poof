@@ -13,6 +13,8 @@ from poof import _cconfig
 from poof import _config
 from poof import _neuter
 from poof import _nukeDirectory
+from poof import _nukeDirectoryLinux
+from poof import _nukeDirectoryMac
 from poof import _timeLapsed
 from poof import _verify
 from poof import die
@@ -134,16 +136,6 @@ def test_backup():
         assert backup(confDir = TEST_POOF_CONF_DIR)
 
 
-def test__nukeDirectory():
-    bogusDir = os.path.join(TEST_POOF_CONF_DIR, 'bogusxxxxx1213')
-    status, error = _nukeDirectory(bogusDir)
-    assert not status
-
-    os.makedirs(bogusDir, exist_ok = True)
-    status, error = _nukeDirectory(bogusDir)
-    assert status
-
-
 def test__neuter():
     mode = os.stat(TEST_POOF_CONF_DIR).st_mode
     os.chmod(TEST_POOF_CONF_DIR, 0)
@@ -156,4 +148,26 @@ def test__neuter():
 
 def test_paths():
     assert CliRunner().invoke(paths)
+
+
+def test__nukeDirectoryMac():
+    bogusDir = os.path.join(TEST_POOF_CONF_DIR, 'bogusxxxxx1213')
+    os.makedirs(bogusDir, exist_ok = True)
+    status, error = _nukeDirectoryMac(bogusDir)
+    assert status
+
+
+def test__nukeDirectoryLinux():
+    # TODO:  https://github.com/poof-backup/poof/issues/35
+    assert True
+
+
+def test__nukeDirectory():
+    bogusDir = os.path.join(TEST_POOF_CONF_DIR, 'bogusxxxxx1213')
+    status, error = _nukeDirectory(bogusDir)
+    assert not status
+
+    os.makedirs(bogusDir, exist_ok = True)
+    status, error = _nukeDirectory(bogusDir)
+    assert status
 
