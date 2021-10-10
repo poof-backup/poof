@@ -7,7 +7,7 @@ SHELL=/bin/bash
 BUILD=./build
 DEVPI_HOST=$(shell cat devpi-hostname.txt)
 DEVPI_PASSWORD=$(shell cat ./devpi-password.txt)
-DEVPI_USER=poof
+DEVPI_USER=$(shell cat ./devpi-user.txt)
 DIST=./dist
 MODULE=$(shell cat modulename.txt)
 # Preparation for devpi?
