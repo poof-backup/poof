@@ -4,9 +4,8 @@
 
 SHELL=/bin/bash
 
-
 BUILD=./build
-DEVPI_HOST=http://localhost:8041
+DEVPI_HOST=$(shell cat devpi-hostname.txt)
 DEVPI_PASSWORD=$(shell cat ./devpi-password.txt)
 DEVPI_USER=poof
 DIST=./dist
@@ -40,13 +39,12 @@ devpi:
 	devpi use $(DEVPI_HOST)
 	devpi login $(DEVPI_USER) --password="$(DEVPI_PASSWORD)"
 	devpi use $(DEVPI_USER)/dev
-# 	devpi use --set-cfg poof/dev
-# 	devpi use --always-set-cfg=yes
+	devpi -v use --set-cfg $(DEVPI_USER)/dev
+	@[[ -e "pip.conf-bak" ]] && rm -f "pip.conf-bak"
 
 
-#	pip install -e .
 install:
-	devpi install $(MODULE)==$(VERSION)
+	pip install -U $(MODULE)==$(VERSION)
 	pip list | awk 'NR < 3 { print; } /$(MODULE)/'
 
 
@@ -66,13 +64,13 @@ nuke: ALWAYS
 	rm -Rf $(shell find test/ | awk '/__pycache__$$/')
 
 
-# publish:
-# 	@echo "publishing NOOP"
-# 
-# 
-# refresh: ALWAYS
-# 	conda install mkl-service
-# 	pip install -U -r requirements.txt
+# The publish: target is for PyPI, not for the devpi server.
+publish:
+	@echo "publishing NOOP"
+
+
+refresh: ALWAYS
+	pip install -U -r requirements.txt
 
 
 # Delete the Python virtual environment - necessary when updating the

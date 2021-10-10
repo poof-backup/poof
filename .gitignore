@@ -142,6 +142,7 @@ dmypy.json
 **/pyvenv.cfg
 **/rclone-poof*
 **bak
+**devpi-hostname*
 **devpi-password*
 **dummy.py
 **dummy.txt
@@ -149,6 +150,7 @@ dmypy.json
 **test.py
 **test.txt
 *swp
+**pip.conf
 
 
 # pycharm
