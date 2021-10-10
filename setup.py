@@ -40,7 +40,7 @@ if '__main__' == __name__:
         namespace_packages   = [ ],
         packages             = find_packages(),
         py_modules           = [ 'clitest', ],
-        url                  = 'http://virustrack.live/covid',
+        url                  = 'https://github.com/poof-backup/poof',
         version              = open('version.txt').read().strip(),
     )
 

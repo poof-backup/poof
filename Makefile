@@ -6,8 +6,9 @@ SHELL=/bin/bash
 
 
 BUILD=./build
-DEVPI_USER=pr3d4t0r
-DEVPI_PASSWORD=nopasswordsetyet
+DEVPI_HOST=http://localhost:8041
+DEVPI_PASSWORD=$(shell cat ./devpi-password.txt)
+DEVPI_USER=poof
 DIST=./dist
 MODULE=$(shell cat modulename.txt)
 # Preparation for devpi?
@@ -21,6 +22,7 @@ VERSION=$(shell cat version.txt)
 all: ALWAYS
 	make test
 	make module
+	make upload
 
 
 clean:
@@ -34,8 +36,17 @@ clean:
 	pushd ./dist ; pip uninstall -y $(MODULE)==$(VERSION) || true ; popd
     
 
+devpi:
+	devpi use $(DEVPI_HOST)
+	devpi login $(DEVPI_USER) --password="$(DEVPI_PASSWORD)"
+	devpi use $(DEVPI_USER)/dev
+# 	devpi use --set-cfg poof/dev
+# 	devpi use --always-set-cfg=yes
+
+
+#	pip install -e .
 install:
-	pip install -e .
+	devpi install $(MODULE)==$(VERSION)
 	pip list | awk 'NR < 3 { print; } /$(MODULE)/'
 
 
@@ -77,6 +88,10 @@ test: ALWAYS
 	pip uninstall -y $(MODULE)==$(VERSION) || true
 	rm -Rfv $$(find $(MODULE) | awk '/__pycache__$$/')
 	rm -Rfv $$(find test | awk '/__pycache__$$/')
+
+
+upload:
+	devpi upload dist/*whl
 
 
 ALWAYS:
