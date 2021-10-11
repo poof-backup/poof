@@ -1,6 +1,6 @@
-# poof
+# poof backup
 
-poof 2-way secure data sync/backup/restore against a cloud drive.
+poof backup - 2-way secure data sync/backup/restore against a cloud drive.
 
 Backup of local file system directories to a cloud drive or other storage, in a
 secure manner, and preserving the original files' attributes for later recovery.
@@ -83,7 +83,7 @@ The verification fails because `poof` must have at least one directory to backup
 in addition to the backup of its own configuration, which defaults to `unittest`
 until overridden by the user.
 
-Verification failes because `poof` must have a minimum of two directories to
+Verification fails because `poof` must have a minimum of two directories to
 backup or upload to the cloud drive:
 
 - A `poof` configuration backup directory
@@ -149,7 +149,7 @@ Run `poof backup` as often as needed or required to copy all the directories in
 the `poof` configuration to the cloud drive.
 
 Run `poof upload` when there is need to sync the local file system directories,
-then removing all the local file (selected directories wipe).
+then removing all the local files (selected directories wipe).
 
 Run  `poof download` to sync the local file system with the most current files
 in the cloud drive, as needed or required.
