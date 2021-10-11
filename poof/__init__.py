@@ -21,6 +21,8 @@ import click
 
 # *** constants ***
 
+__VERSION__ = "1.1.2"
+
 RCLONE_PROG      = 'rclone'
 RCLONE_PROG_TEST = 'ls' # a program we know MUST exist to the which command
 SPECIAL_DIRS     = (
@@ -37,7 +39,7 @@ SPECIAL_DIRS     = (
     'VirtualBox VMs',
 )
 
-# -------------------- 
+# --------------------
 
 POOF_CONFIG_DIR = AppDirs('poof', os.environ['USER']).user_config_dir
 POOF_CONFIG_FILES = {
@@ -61,7 +63,7 @@ class PoofStatus(Enum):
 
 class Configuration(object):
     def __init__(self):
-        self.confDir = POOF_CONFIG_DIR       
+        self.confDir = POOF_CONFIG_DIR
         self.confFiles = POOF_CONFIG_FILES
 
 
@@ -82,7 +84,7 @@ def main(conf, confdir, poofconf, rcloneconf):
     conf.confDir   = confdir
     conf.confFiles = { 'poof.conf': poofconf, 'rclone-poof.conf': rcloneconf, }
 
-    
+
 def _initializeConfigIn(confFile, confDir):
     if not os.path.exists(confFile):
         os.makedirs(confDir, exist_ok = True)
@@ -186,7 +188,7 @@ def _config(confFiles = POOF_CONFIG_FILES, confDir = POOF_CONFIG_DIR):
         actualConfiguration = json.load(inputFile)
 
     return actualConfiguration
-    
+
 @main.command()
 @globalConf
 def config(conf):
@@ -215,18 +217,18 @@ def _clone(toCloud, confDir = POOF_CONFIG_DIR, confFiles = POOF_CONFIG_FILES, nu
                     confFiles['rclone-poof.conf'],
                     '-P',
                     '-L',
-                    'sync', 
+                    'sync',
                     localDir,
                     '%s:%s/%s' % (conf['remote'], conf['bucket'], cloudDir),
                   )
             processingItem = localDir
         else:
-            cloudPath ='%s:%s/%s' % (conf['remote'], conf['bucket'], cloudDir) 
+            cloudPath ='%s:%s/%s' % (conf['remote'], conf['bucket'], cloudDir)
             args = ( RCLONE_PROG,
                     '--config',
                     confFiles['rclone-poof.conf'],
                     '-P',
-                    'sync', 
+                    'sync',
                     cloudPath,
                     localDir,
                   )
@@ -345,7 +347,7 @@ Upload all the files to the cloud drive and delete the local paths.
     return outcome
 
 
-def _cconfig(confFiles = POOF_CONFIG_FILES, confDir = POOF_CONFIG_DIR): 
+def _cconfig(confFiles = POOF_CONFIG_FILES, confDir = POOF_CONFIG_DIR):
     confFile = confFiles['rclone-poof.conf']
     _initializeCloningConfigIn(confFile, confDir)
 
@@ -413,4 +415,3 @@ def verify(conf, component, allComponents = True):
 Verify the poof and cloning tool configurations.
 """
     return _verify(component, conf.confFiles, allComponents)
-

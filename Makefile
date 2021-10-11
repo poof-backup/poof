@@ -10,10 +10,8 @@ DEVPI_PASSWORD=$(shell cat ./devpi-password.txt)
 DEVPI_USER=$(shell cat ./devpi-user.txt)
 DIST=./dist
 MODULE=$(shell cat modulename.txt)
-# Preparation for devpi?
-# REQUIREMENTS=$(shell cat requirements.txt)
 REQUIREMENTS=requirements.txt
-VERSION=$(shell cat version.txt)
+VERSION=$(shell echo "from poof import __VERSION__; print(__VERSION__)" | python)
 
 
 # Targets:
@@ -33,7 +31,7 @@ clean:
 	rm -fv $$(find . | awk '/bogus/')
 	rm -fv /usr/local/bin/poof
 	pushd ./dist ; pip uninstall -y $(MODULE)==$(VERSION) || true ; popd
-    
+
 
 devpi:
 	devpi use $(DEVPI_HOST)
@@ -65,8 +63,12 @@ nuke: ALWAYS
 
 
 # The publish: target is for PyPI, not for the devpi server.
+# https://www.python.org/dev/peps/pep-0541/#how-to-request-a-name-transfer
+#
+# PyPI user name:  ciurana; pypi AT cime_net
 publish:
-	@echo "publishing NOOP"
+	twine check $(DIST)/*
+	twine upload $(DIST)/*
 
 
 refresh: ALWAYS
@@ -80,6 +82,7 @@ resetpy: ALWAYS
 
 
 test: ALWAYS
+	@echo "Version = $(VERSION)"
 	pip install -r requirements.txt
 	pip install -e .
 	pytest -v ./tests/test-poof.py
@@ -93,4 +96,3 @@ upload:
 
 
 ALWAYS:
-
