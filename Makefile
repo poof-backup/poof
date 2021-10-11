@@ -4,10 +4,10 @@
 
 SHELL=/bin/bash
 
-
 BUILD=./build
-DEVPI_USER=pr3d4t0r
-DEVPI_PASSWORD=nopasswordsetyet
+DEVPI_HOST=$(shell cat devpi-hostname.txt)
+DEVPI_PASSWORD=$(shell cat ./devpi-password.txt)
+DEVPI_USER=$(shell cat ./devpi-user.txt)
 DIST=./dist
 MODULE=$(shell cat modulename.txt)
 # Preparation for devpi?
@@ -21,6 +21,7 @@ VERSION=$(shell cat version.txt)
 all: ALWAYS
 	make test
 	make module
+	make upload
 
 
 clean:
@@ -34,8 +35,16 @@ clean:
 	pushd ./dist ; pip uninstall -y $(MODULE)==$(VERSION) || true ; popd
     
 
+devpi:
+	devpi use $(DEVPI_HOST)
+	devpi login $(DEVPI_USER) --password="$(DEVPI_PASSWORD)"
+	devpi use $(DEVPI_USER)/dev
+	devpi -v use --set-cfg $(DEVPI_USER)/dev
+	@[[ -e "pip.conf-bak" ]] && rm -f "pip.conf-bak"
+
+
 install:
-	pip install -e .
+	pip install -U $(MODULE)==$(VERSION)
 	pip list | awk 'NR < 3 { print; } /$(MODULE)/'
 
 
@@ -55,13 +64,13 @@ nuke: ALWAYS
 	rm -Rf $(shell find test/ | awk '/__pycache__$$/')
 
 
-# publish:
-# 	@echo "publishing NOOP"
-# 
-# 
-# refresh: ALWAYS
-# 	conda install mkl-service
-# 	pip install -U -r requirements.txt
+# The publish: target is for PyPI, not for the devpi server.
+publish:
+	@echo "publishing NOOP"
+
+
+refresh: ALWAYS
+	pip install -U -r requirements.txt
 
 
 # Delete the Python virtual environment - necessary when updating the
@@ -77,6 +86,10 @@ test: ALWAYS
 	pip uninstall -y $(MODULE)==$(VERSION) || true
 	rm -Rfv $$(find $(MODULE) | awk '/__pycache__$$/')
 	rm -Rfv $$(find test | awk '/__pycache__$$/')
+
+
+upload:
+	devpi upload dist/*whl
 
 
 ALWAYS:

@@ -197,5 +197,5 @@ a more reliable mechanism than building that logic in `poof`.
 
 
 ---
-&#169; the poof contributors
+&#169; the poof-backup contributors
 

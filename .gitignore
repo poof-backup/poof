@@ -142,8 +142,12 @@ dmypy.json
 **/pyvenv.cfg
 **/rclone-poof*
 **bak
+**devpi-hostname*
+**devpi-password*
+**devpi-user*
 **dummy.py
 **dummy.txt
+**pip.conf
 **rclone.conf
 **test.py
 **test.txt
