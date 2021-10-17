@@ -39,23 +39,23 @@ First, install the devpi client in your current virtual environent:
 pip install -U devpi-client
 ```
 
-Specify the devpi host:
+Specify the devpi host (https://pypi.cime.dev):
 
 ```bash
-devpi use https://pypi.cime.dev
+devpi use $(cat ./devpi-hostname.txt) 
 ```
 
 Create your user name and root index:
 
 ```
-devpi user -c yourusernamehere password="somesecret" email="whatever@domain.tld"
+devpi user -c $(cat devpi-user.txt) password="$(cat devpi-password.txt)" email="whatever@domain.tld"
 ```
 
 Log on to the devpi server and create your index.  Best practice is to call that
 index `dev` and the Makefile assumes this convetion:
 
 ```
-devpi login yourusername
+devpi login $(cat devpi-user.txt)
 devpi index -c dev bases=root/pypi
 ```
 

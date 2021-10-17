@@ -104,15 +104,22 @@ poof.conf = /Users/joe-user/Library/Application Support/poof/poof.conf
 rclone-poof.conf = /Users/joe-user/Library/Application Support/poof/rclone-poof.conf
 ```
 
-Edit the corresponding entries to confirm a valid configuration.  Enter the 
-full path to each directory, no ~ or `$HOME`.  In `poof.conf`:
+It shows these paths on Linux:
+
+```
+poof.conf = /home/joe-user/.config/poof/poof.conf
+rclone-poof.conf = /home/joe-user/.config/poof/rclone-poof.conf
+```
+
+Enter the full path(s) to each directory you wish to back up, no `~` or `$HOME`.  In `poof.conf`:
 
 ```
 {
   "bucket": "poofbackup",
   "confFile": "/Users/joe-user/Library/Application Support/poof/poof.conf",
   "paths": {
-    "/Users/joe-user/Documents": "Documents"
+    "/Users/joe-user/Documents": "Documents",
+    "/Users/joe-user/Downloads": "Downloads",
     "/Users/joe-user/Library/Application Support/poof": "poof-config"
   },
   "remote": "my-poof"

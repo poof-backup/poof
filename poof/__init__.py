@@ -143,41 +143,43 @@ def die(message, exitCode = 0):
     if exitCode:
         sys.exit(exitCode)
 
+# TODO:  use the Python API instead of calling external OS-levels commands here?
+#        Neither rm -P nor srm are standard, and neither has much effect on
+#        actual security since they don't work on SSDs anyway.
+def _getNukeDirectoryArgsMac(path):
+	args = (
+		'/bin/rm',
+		'-Prfv',
+		path,
+	)
+	return args
 
-def _nukeDirectoryMac(path):
-    result = False
-    error  = None
-
-    if os.path.exists(path):
-        args = (
-            '/bin/rm',
-            '-Prfv',
-            path,
-        )
-        procResult = subprocess.run(args)
-
-        result = not procResult.returncode
-
-    return result, error
-
-
-def _nukeDirectoryLinux(path):
-    # TODO:  https://github.com/poof-backup/poof/issues/35
-    return False
-
+def _getNukeDirectoryArgsLinux(path):
+	args = (
+		'/bin/rm',
+		'-Rfv',
+		path,
+	)
+	return args
 
 def _nukeDirectory(path):
     result = False
     error  = Exception()
-
+    args = False
+    
     hostPlatform = platform.system()
 
-    if 'Darwin' == hostPlatform:
-        return _nukeDirectoryMac(path)
-    elif 'Linux' == hostPlatform:
-        return _nukeDirectoryLinux(path)
-    else:
-        return result, error
+    if os.path.exists(path):
+        if 'Darwin' == hostPlatform:
+            args =  _getNukeDirectoryArgsMac(path)
+        elif 'Linux' == hostPlatform:
+            args =  _getNukeDirectoryArgsLinux(path)
+
+    if args:
+        procResult = subprocess.run(args)
+        result = not procResult.returncode
+
+    return result, error
 
 
 def _config(confFiles = POOF_CONFIG_FILES, confDir = POOF_CONFIG_DIR):
