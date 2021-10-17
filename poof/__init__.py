@@ -21,7 +21,7 @@ import click
 
 # *** constants ***
 
-__VERSION__ = "1.1.2"
+__VERSION__ = "1.1.3"
 
 RCLONE_PROG      = 'rclone'
 RCLONE_PROG_TEST = 'ls' # a program we know MUST exist to the which command
@@ -162,8 +162,20 @@ def _nukeDirectoryMac(path):
 
 
 def _nukeDirectoryLinux(path):
-    # TODO:  https://github.com/poof-backup/poof/issues/35
-    return False
+    result = False
+    error  = None
+
+    if os.path.exists(path):
+        args = (
+            '/bin/rm',
+            '-Rfv',
+            path,
+        )
+        procResult = subprocess.run(args)
+
+        result = not procResult.returncode
+
+    return result, error
 
 
 def _nukeDirectory(path):
