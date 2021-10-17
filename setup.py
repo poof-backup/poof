@@ -47,7 +47,7 @@ if '__main__' == __name__:
         license                       = "BSD3",
         long_description              = README,
         long_description_content_type = 'text/markdown',
-        name                          = open('modulename.txt').read().replace('\n', ''),
+        name                          = open('package.txt').read().replace('\n', ''),
         namespace_packages            = [ ],
         packages                      = find_packages(),
         url                           = 'https://github.com/poof-backup/poof',
