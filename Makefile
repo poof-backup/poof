@@ -72,8 +72,8 @@ package:
 #
 # PyPI user name:  ciurana; pypi AT cime_net
 publish:
-	twine check $(DIST)/*
-	twine upload $(DIST)/*
+	twine --no-color check $(DIST)/*
+	twine --no-color upload --verbose $(DIST)/*
 
 
 refresh: ALWAYS
