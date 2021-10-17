@@ -21,7 +21,7 @@ import click
 
 # *** constants ***
 
-__VERSION__ = "1.1.5"
+__VERSION__ = "1.1.6"
 
 RCLONE_PROG      = 'rclone'
 RCLONE_PROG_TEST = 'ls' # a program we know MUST exist to the which command

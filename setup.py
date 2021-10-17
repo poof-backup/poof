@@ -32,9 +32,14 @@ if '__main__' == __name__:
         author                        = 'Eugene Ciurana pr3d4t0r',
         author_email                  = 'poof.project@cime.net',
         classifiers                   = [
-            "License :: OST Approved :: BSD3 License",
+            "Intended Audience :: Other Audience",
+            "License :: OSI Approved :: BSD License",
+            "Operating System :: MacOS",
+            "Operating System :: Unix",
             "Programming Language :: Python :: 3",
             "Programming Language :: Python :: 3.7",
+            "Topic :: System :: Archiving :: Backup",
+            "Topic :: Utilities",
         ],
         description                   = 'poof backup - instant, secure backup to a cloud drive',
         entry_points                  = {
