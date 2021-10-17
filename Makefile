@@ -9,7 +9,7 @@ DEVPI_HOST=$(shell cat devpi-hostname.txt)
 DEVPI_PASSWORD=$(shell cat ./devpi-password.txt)
 DEVPI_USER=$(shell cat ./devpi-user.txt)
 DIST=./dist
-MODULE=$(shell cat modulename.txt)
+PACKAGE=$(shell cat package.txt)
 REQUIREMENTS=requirements.txt
 VERSION=$(shell echo "from poof import __VERSION__; print(__VERSION__)" | python)
 
@@ -25,12 +25,12 @@ all: ALWAYS
 clean:
 	rm -Rf $(BUILD)/*
 	rm -Rf $(DIST)/*
-	rm -Rfv $$(find $(MODULE) | awk '/__pycache__$$/')
+	rm -Rfv $$(find $(PACKAGE) | awk '/__pycache__$$/')
 	rm -Rfv $$(find test | awk '/__pycache__$$/')
 	rm -Rfv $$(find . | awk '/.ipynb_checkpoints/')
 	rm -fv $$(find . | awk '/bogus/')
 	rm -fv /usr/local/bin/poof
-	pushd ./dist ; pip uninstall -y $(MODULE)==$(VERSION) || true ; popd
+	pushd ./dist ; pip uninstall -y $(PACKAGE)==$(VERSION) || true ; popd
 
 
 devpi:
@@ -42,8 +42,8 @@ devpi:
 
 
 install:
-	pip install -U $(MODULE)==$(VERSION)
-	pip list | awk 'NR < 3 { print; } /$(MODULE)/'
+	pip install -U $(PACKAGE)==$(VERSION)
+	pip list | awk 'NR < 3 { print; } /$(PACKAGE)/'
 
 
 libupdate:
@@ -51,15 +51,20 @@ libupdate:
 	pip install -Ur $(REQUIREMENTS)
 
 
+# This target will be removed in a future Makefile release.  The correct semantics are to use the package target.
 module:
-	pip install -r $(REQUIREMENTS)
-	python setup.py bdist_wheel
+	make package
 
 
 nuke: ALWAYS
 	make clean
-	rm -Rf $(shell find $(MODULE) | awk '/__pycache__$$/')
+	rm -Rf $(shell find $(PACKAGE) | awk '/__pycache__$$/')
 	rm -Rf $(shell find test/ | awk '/__pycache__$$/')
+
+
+package:
+	pip install -r $(REQUIREMENTS)
+	python setup.py bdist_wheel
 
 
 # The publish: target is for PyPI, not for the devpi server.
@@ -86,8 +91,8 @@ test: ALWAYS
 	pip install -r requirements.txt
 	pip install -e .
 	pytest -v ./tests/test-poof.py
-	pip uninstall -y $(MODULE)==$(VERSION) || true
-	rm -Rfv $$(find $(MODULE) | awk '/__pycache__$$/')
+	pip uninstall -y $(PACKAGE)==$(VERSION) || true
+	rm -Rfv $$(find $(PACKAGE) | awk '/__pycache__$$/')
 	rm -Rfv $$(find test | awk '/__pycache__$$/')
 
 
