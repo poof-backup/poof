@@ -21,7 +21,7 @@ import click
 
 # *** constants ***
 
-__VERSION__ = "1.1.4"
+__VERSION__ = "1.1.5"
 
 RCLONE_PROG      = 'rclone'
 RCLONE_PROG_TEST = 'ls' # a program we know MUST exist to the which command
@@ -166,7 +166,7 @@ def _nukeDirectory(path):
     result = False
     error  = Exception()
     args = False
-    
+
     hostPlatform = platform.system()
 
     if os.path.exists(path):
@@ -414,6 +414,14 @@ def _verify(component = RCLONE_PROG, confFiles = POOF_CONFIG_FILES, allComponent
 @globalConf
 def verify(conf, component, allComponents = True):
     """
-Verify the poof and cloning tool configurations.
-"""
+    Verify the poof and cloning tool configurations.
+    """
     return _verify(component, conf.confFiles, allComponents)
+
+@main.command()
+@globalConf
+def version(_):
+    """
+    Print software version and exit.
+    """
+    click.echo('poof version %s' % (__VERSION__))
