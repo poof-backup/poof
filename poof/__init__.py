@@ -143,7 +143,9 @@ def die(message, exitCode = 0):
     if exitCode:
         sys.exit(exitCode)
 
-
+# TODO:  use the Python API instead of calling external OS-levels commands here?
+#        Neither rm -P nor srm are standard, and neither has much effect on
+#        actual security since they don't work on SSDs anyway.
 def _getNukeDirectoryArgsMac(path):
 	args = (
 		'/bin/rm',
