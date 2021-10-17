@@ -144,52 +144,40 @@ def die(message, exitCode = 0):
         sys.exit(exitCode)
 
 
-def _nukeDirectoryMac(path):
-    result = False
-    error  = None
+def _getNukeDirectoryArgsMac(path):
+	args = (
+		'/bin/rm',
+		'-Prfv',
+		path,
+	)
+	return args
 
-    if os.path.exists(path):
-        args = (
-            '/bin/rm',
-            '-Prfv',
-            path,
-        )
-        procResult = subprocess.run(args)
-
-        result = not procResult.returncode
-
-    return result, error
-
-
-def _nukeDirectoryLinux(path):
-    result = False
-    error  = None
-
-    if os.path.exists(path):
-        args = (
-            '/bin/rm',
-            '-Rfv',
-            path,
-        )
-        procResult = subprocess.run(args)
-
-        result = not procResult.returncode
-
-    return result, error
-
+def _getNukeDirectoryArgsLinux(path):
+	args = (
+		'/bin/rm',
+		'-Rfv',
+		path,
+	)
+	return args
 
 def _nukeDirectory(path):
     result = False
     error  = Exception()
-
+    args = False
+    
     hostPlatform = platform.system()
 
-    if 'Darwin' == hostPlatform:
-        return _nukeDirectoryMac(path)
-    elif 'Linux' == hostPlatform:
-        return _nukeDirectoryLinux(path)
-    else:
-        return result, error
+    if os.path.exists(path):
+        if 'Darwin' == hostPlatform:
+            args =  _getNukeDirectoryArgsMac(path)
+        elif 'Linux' == hostPlatform:
+            args =  _getNukeDirectoryArgsLinux(path)
+
+    if args:
+        procResult = subprocess.run(args)
+        result = not procResult.returncode
+
+    return result, error
 
 
 def _config(confFiles = POOF_CONFIG_FILES, confDir = POOF_CONFIG_DIR):

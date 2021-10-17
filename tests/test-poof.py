@@ -13,8 +13,6 @@ from poof import _cconfig
 from poof import _config
 from poof import _neuter
 from poof import _nukeDirectory
-from poof import _nukeDirectoryLinux
-from poof import _nukeDirectoryMac
 from poof import _timeLapsed
 from poof import _verify
 from poof import die
