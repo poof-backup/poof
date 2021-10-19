@@ -15,13 +15,14 @@ import shutil
 import stat
 import subprocess
 import sys
+import uuid
 
 import click
 
 
 # *** constants ***
 
-__VERSION__ = "1.1.6"
+__VERSION__ = "1.1.7"
 
 RCLONE_PROG      = 'rclone'
 RCLONE_PROG_TEST = 'ls' # a program we know MUST exist to the which command
@@ -89,11 +90,13 @@ def _initializeConfigIn(confFile, confDir):
     if not os.path.exists(confFile):
         os.makedirs(confDir, exist_ok = True)
         with open(confFile, 'w') as outputFile:
+            bucketID = str(uuid.uuid4()).split('-')[-1]
             paths = {
                 confDir: 'unittest',
             }
             basicConfig = {
-                'bucket': 'poofbackup',
+                # bucket name must be unique:
+                'bucket': 'poofbackup-%s-%s' % (os.environ['USER'], bucketID),
                 'confFile': confFile,
                 'paths': paths,
                 'remote': 'my-poof', # rclone .INI section
@@ -128,7 +131,6 @@ def _initCloningScaffold():
     return conf
 
 
-
 def _initializeCloningConfigIn(confFile, confDir):
     if not os.path.exists(confFile):
         cloningConf = _initCloningScaffold()
@@ -142,6 +144,7 @@ def die(message, exitCode = 0):
     click.echo(click.style(message, fg='red'))
     if exitCode:
         sys.exit(exitCode)
+
 
 # TODO:  use the Python API instead of calling external OS-levels commands here?
 #        Neither rm -P nor srm are standard, and neither has much effect on
@@ -366,6 +369,18 @@ def cconfig():
 Ensure that the rclone-poof.conf file exists; creates it if not present.
 """
     _cconfig()
+
+
+def _econfig(confFiles = POOF_CONFIG_FILES, confDir = POOF_CONFIG_DIR, password1 = None, password2 = None):
+    return False
+
+
+@main.command()
+def econfig():
+    """
+    Generate the encrypted rclone configuration scaffold.
+    """
+    _econfig()
 
 
 def _verify(component = RCLONE_PROG, confFiles = POOF_CONFIG_FILES, allComponents = True):

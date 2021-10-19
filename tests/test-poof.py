@@ -11,6 +11,7 @@ from poof import PoofStatus
 from poof import RCLONE_PROG_TEST
 from poof import _cconfig
 from poof import _config
+from poof import _econfig
 from poof import _neuter
 from poof import _nukeDirectory
 from poof import _timeLapsed
@@ -156,4 +157,8 @@ def test__nukeDirectory():
     os.makedirs(bogusDir, exist_ok = True)
     status, error = _nukeDirectory(bogusDir)
     assert status
+
+
+def test__econfig():
+    assert not _econfig()
 
