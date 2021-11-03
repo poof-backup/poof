@@ -18,7 +18,7 @@ VERSION=$(shell echo "from poof import __VERSION__; print(__VERSION__)" | python
 
 all: ALWAYS
 	make test
-	make module
+	make package
 	make upload
 
 
@@ -49,6 +49,11 @@ install:
 libupdate:
 	pip install -U pip
 	pip install -Ur $(REQUIREMENTS)
+
+
+local:
+	make package
+	pip install -e .
 
 
 # This target will be removed in a future Makefile release.  The correct semantics are to use the package target.
