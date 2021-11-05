@@ -22,7 +22,7 @@ import click
 
 # *** constants ***
 
-__VERSION__ = "1.1.7"
+__VERSION__ = "1.1.8"
 
 RCLONE_PROG      = 'rclone'
 RCLONE_PROG_TEST = 'ls' # a program we know MUST exist to the which command
@@ -217,6 +217,7 @@ def _clone(toCloud, confDir = POOF_CONFIG_DIR, confFiles = POOF_CONFIG_FILES, nu
             localDir = localDir[:-1]
 
         if toCloud:
+            # TODO:  Detect if poof.conf files/directories and DO NOT encrypt!
             args = ( RCLONE_PROG,
                     '--config',
                     confFiles['rclone-poof.conf'],
@@ -224,7 +225,9 @@ def _clone(toCloud, confDir = POOF_CONFIG_DIR, confFiles = POOF_CONFIG_FILES, nu
                     '-L',
                     'sync',
                     localDir,
-                    '%s:%s/%s' % (conf['remote'], conf['bucket'], cloudDir),
+                    # TODO:  Detect if encrypted config, and use the appropriate args list.
+                    # '%s:%s/%s' % (conf['remote'], conf['bucket'], cloudDir),
+                    '%s:%s' % (conf['remote'], cloudDir),
                   )
             processingItem = localDir
         else:
@@ -240,6 +243,7 @@ def _clone(toCloud, confDir = POOF_CONFIG_DIR, confFiles = POOF_CONFIG_FILES, nu
             processingItem = cloudPath
 
         click.secho('\nprocessing: %s' % processingItem)
+        click.secho('args = %s' % str(args))
         result = subprocess.run(args)
 
         try:
@@ -413,12 +417,27 @@ def _verify(component = RCLONE_PROG, confFiles = POOF_CONFIG_FILES, allComponent
         # heuristic:
         cloningConf = _cconfig(confFiles, POOF_CONFIG_DIR)
         for section in cloningConf.sections():
-            if cloningConf.get(section, 'secret_access_key') == 'BOGUS-SECRET-KEY-USE-YOURS':
-                component = confFiles['rclone-poof.conf']
-                status    = PoofStatus.WARN_MISCONFIGURED
-                click.echo('configuration %s? - %s' % (component, status))
+            # TODO:  Refactor this shit!
+            if cloningConf.get(section, 'type') == 'crypt':
+                if cloningConf.get(section, 'password') == 'BOGUS-PASSWORD':
+                    component = confFiles['rclone-poof.conf']
+                    status    = PoofStatus.WARN_MISCONFIGURED
+                    click.echo('configuration %s [%s].%s = %s - %s' % (component, section, 'password', 'BOGUS-PASSWORD', status))
 
-                return component, status
+                    return component, status
+                elif cloningConf.get(section, 'password2') == 'BOGUS-PASSWORD2':
+                    component = confFiles['rclone-poof.conf']
+                    status    = PoofStatus.WARN_MISCONFIGURED
+                    click.echo('configuration %s [%s].%s = %s - %s' % (component, section, 'password2', 'BOGUS-PASSWORD2', status))
+
+                    return component, status
+            elif cloningConf.get(section, 'type') == 's3':
+                if cloningConf.get(section, 'secret_access_key') == 'BOGUS-SECRET-KEY-USE-YOURS':
+                    component = confFiles['rclone-poof.conf']
+                    status    = PoofStatus.WARN_MISCONFIGURED
+                    click.echo('configuration %s [%s].%s = %s - %s' % (component, section, 'secret_access_key', 'BOGUS-SECRET-KEY-USE-YOURS', status))
+
+                    return component, status
 
         click.echo('configuration appears to be valid and has valid credentials')
 
