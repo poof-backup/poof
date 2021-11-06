@@ -9,6 +9,8 @@ from click.testing import CliRunner
 
 from poof import PoofStatus
 from poof import RCLONE_PROG_TEST
+from poof import _CRYPT_BOGUS_SECRETS
+from poof import _S3_BOGUS_SECRETS
 from poof import _cconfig
 from poof import _config
 from poof import _econfig
@@ -16,6 +18,7 @@ from poof import _neuter
 from poof import _nukeDirectory
 from poof import _timeLapsed
 from poof import _verify
+from poof import _verifyBogusValuesIn
 from poof import die
 from poof import paths
 
@@ -87,6 +90,21 @@ def test__timeLapsed():
     assert hours == 1
     assert minutes == 0
     assert seconds == 1
+
+
+def test__verifyBogusValuesIn():
+    component    = RCLONE_PROG_TEST
+    conf         = _cconfig(TEST_POOF_CONF_FILES, TEST_POOF_CONF_DIR)
+    section      = 'my-poof'
+    bogusSecrets = copy.deepcopy(_S3_BOGUS_SECRETS)
+    assert _verifyBogusValuesIn(component, conf, section, bogusSecrets) == PoofStatus.WARN_MISCONFIGURED
+
+    bogusSecrets['secret_access_key'] = 'bogus-access-key-not-default'
+    assert _verifyBogusValuesIn(component, conf, section, bogusSecrets) == PoofStatus.OK
+
+    bogusSecrets = copy.deepcopy(_CRYPT_BOGUS_SECRETS)
+    section      = 'my-poof'
+    assert _verifyBogusValuesIn(component, conf, section, bogusSecrets) == PoofStatus.ERROR_MISSING_KEY
 
 
 def test__verify():
@@ -161,4 +179,7 @@ def test__nukeDirectory():
 
 def test__econfig():
     assert not _econfig()
+
+
+test__verifyBogusValuesIn()
 

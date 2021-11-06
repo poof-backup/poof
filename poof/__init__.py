@@ -22,7 +22,7 @@ import click
 
 # *** constants ***
 
-__VERSION__ = "1.1.8"
+__VERSION__ = "1.2.0"
 
 RCLONE_PROG      = 'rclone'
 RCLONE_PROG_TEST = 'ls' # a program we know MUST exist to the which command
@@ -47,6 +47,14 @@ POOF_CONFIG_FILES = {
     'poof.conf': os.path.join(POOF_CONFIG_DIR, 'poof.conf'),
     'rclone-poof.conf': os.path.join(POOF_CONFIG_DIR, 'rclone-poof.conf'),
 }
+_CRYPT_BOGUS_SECRETS = {
+    'password': 'BOGUS-PASSWORD',
+    'password2': 'BOGUS-PASSWORD2',
+
+}
+_S3_BOGUS_SECRETS = {
+    'secret_access_key': 'BOGUS-SECRET-KEY-USE-YOURS',
+}
 
 
 # --- states ---
@@ -60,6 +68,7 @@ class PoofStatus(Enum):
     MISSING_CLONING_PROGRAM = 5
     MISSING_CONFIG_FILE     = 6
     WARN_MISCONFIGURED      = 100
+    ERROR_MISSING_KEY       = 200
 
 
 class Configuration(object):
@@ -387,6 +396,21 @@ def econfig():
     _econfig()
 
 
+def _verifyBogusValuesIn(component, conf, section, bogusSecrets):
+    for key, bogusValue in bogusSecrets.items():
+        try:
+            if conf[section][key] == bogusValue:
+                status = PoofStatus.WARN_MISCONFIGURED
+                click.echo('configuration %s [%s].%s = %s - %s' % (component, section, key, bogusValue, status))
+                return status
+        except:
+            status = PoofStatus.ERROR_MISSING_KEY
+            click.echo('configuration %s [%s].%s = %s - %s' % (component, section, key, bogusValue, status))
+            return status
+
+    return PoofStatus.OK
+
+
 def _verify(component = RCLONE_PROG, confFiles = POOF_CONFIG_FILES, allComponents = True):
     status = PoofStatus.OK
 
@@ -416,32 +440,23 @@ def _verify(component = RCLONE_PROG, confFiles = POOF_CONFIG_FILES, allComponent
 
         # heuristic:
         cloningConf = _cconfig(confFiles, POOF_CONFIG_DIR)
+
+        component = confFiles['rclone-poof.conf']
         for section in cloningConf.sections():
-            # TODO:  Refactor this shit!
-            if cloningConf.get(section, 'type') == 'crypt':
-                if cloningConf.get(section, 'password') == 'BOGUS-PASSWORD':
-                    component = confFiles['rclone-poof.conf']
-                    status    = PoofStatus.WARN_MISCONFIGURED
-                    click.echo('configuration %s [%s].%s = %s - %s' % (component, section, 'password', 'BOGUS-PASSWORD', status))
-
+            if cloningConf[section]['type'] == 'crypt':
+                status = _verifyBogusValuesIn(component, cloningConf, section, _CRYPT_BOGUS_SECRETS)
+                if status is not PoofStatus.OK:
                     return component, status
-                elif cloningConf.get(section, 'password2') == 'BOGUS-PASSWORD2':
-                    component = confFiles['rclone-poof.conf']
-                    status    = PoofStatus.WARN_MISCONFIGURED
-                    click.echo('configuration %s [%s].%s = %s - %s' % (component, section, 'password2', 'BOGUS-PASSWORD2', status))
 
-                    return component, status
-            elif cloningConf.get(section, 'type') == 's3':
-                if cloningConf.get(section, 'secret_access_key') == 'BOGUS-SECRET-KEY-USE-YOURS':
-                    component = confFiles['rclone-poof.conf']
-                    status    = PoofStatus.WARN_MISCONFIGURED
-                    click.echo('configuration %s [%s].%s = %s - %s' % (component, section, 'secret_access_key', 'BOGUS-SECRET-KEY-USE-YOURS', status))
-
+            if cloningConf[section]['type'] == 's3':
+                status = _verifyBogusValuesIn(component, cloningConf, section, _S3_BOGUS_SECRETS)
+                if status is not PoofStatus.OK:
                     return component, status
 
         click.echo('configuration appears to be valid and has valid credentials')
 
     return None, status
+
 
 @main.command()
 @click.option('--component', default = RCLONE_PROG, help = 'Component to check', show_default = True)
@@ -459,3 +474,4 @@ def version(_):
     Print software version and exit.
     """
     click.echo('poof version %s' % (__VERSION__))
+
