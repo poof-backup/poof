@@ -108,7 +108,7 @@ def _initializeConfigIn(confFile, confDir):
                 'bucket': 'poofbackup-%s-%s' % (os.environ['USER'], bucketID),
                 'confFile': confFile,
                 'paths': paths,
-                'remote': 'my-poof', # rclone .INI section
+                'remote': 'poof-backup',
             }
             json.dump(basicConfig, outputFile, indent = 2, sort_keys = True)
         os.chmod(confFile, stat.S_IRUSR | stat.S_IWUSR)
@@ -117,7 +117,7 @@ def _initializeConfigIn(confFile, confDir):
 def _initCloningScaffold():
     conf = configparser.ConfigParser()
 
-    section  = 'my-poof'
+    section  = 'poof-backup'
     scaffold = {
         'type': 's3',
         'provider': 'AWS',
@@ -158,21 +158,29 @@ def die(message, exitCode = 0):
 # TODO:  use the Python API instead of calling external OS-levels commands here?
 #        Neither rm -P nor srm are standard, and neither has much effect on
 #        actual security since they don't work on SSDs anyway.
+#
+#        https://github.com/poof-backup/poof/issues/59
 def _getNukeDirectoryArgsMac(path):
 	args = (
 		'/bin/rm',
-		'-Prfv',
+		'-Prf',
 		path,
 	)
 	return args
 
+
 def _getNukeDirectoryArgsLinux(path):
 	args = (
 		'/bin/rm',
-		'-Rfv',
+		'-Rf',
 		path,
 	)
 	return args
+
+
+def _getNukeDirectoryArgsWindows(path):
+    raise NotImplementedError
+
 
 def _nukeDirectory(path):
     result = False
@@ -202,6 +210,18 @@ def _config(confFiles = POOF_CONFIG_FILES, confDir = POOF_CONFIG_DIR):
         actualConfiguration = json.load(inputFile)
 
     return actualConfiguration
+
+
+def _encryptionIsEnabled(poofConf, cloneConf):
+    enabled = False
+
+    for section in cloneConf.sections():
+        if cloneConf[section]['type'] == 'crypt' and cloneConf[section]['password'] != 'BOGUS-PASSWORD' and poofConf['remote'] == section:
+            enabled = True
+            break
+
+    return enabled
+
 
 @main.command()
 @globalConf
@@ -332,7 +352,7 @@ def _neuter(confDir = POOF_CONFIG_DIR, unitTest = False):
     if not unitTest:
         try:
             args = (
-                'pip',
+                'pip3',
                 'uninstall',
                 '-y',
                 'poof',
@@ -385,7 +405,7 @@ Ensure that the rclone-poof.conf file exists; creates it if not present.
 
 
 def _econfig(confFiles = POOF_CONFIG_FILES, confDir = POOF_CONFIG_DIR, password1 = None, password2 = None):
-    return False
+    raise NotImplementedError
 
 
 @main.command()
@@ -393,7 +413,7 @@ def econfig():
     """
     Generate the encrypted rclone configuration scaffold.
     """
-    _econfig()
+    raise NotImplementedError
 
 
 def _verifyBogusValuesIn(component, conf, section, bogusSecrets):
