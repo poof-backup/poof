@@ -22,14 +22,14 @@ all: ALWAYS
 	make upload
 
 
+# TODO: Use rm -Rfv $$(find $(PACKAGE) | awk '/__pycache__$$/') after the poof
+#       package is claimed to this project by PyPI.
 clean:
 	rm -Rf $(BUILD)/*
 	rm -Rf $(DIST)/*
-	rm -Rfv $$(find $(PACKAGE) | awk '/__pycache__$$/')
-	rm -Rfv $$(find test | awk '/__pycache__$$/')
+	rm -Rfv $$(find poof/ | awk '/__pycache__$$/')
+	rm -Rfv $$(find tests | awk '/__pycache__$$/')
 	rm -Rfv $$(find . | awk '/.ipynb_checkpoints/')
-	rm -fv $$(find . | awk '/bogus/')
-	rm -fv /usr/local/bin/poof
 	pushd ./dist ; pip uninstall -y $(PACKAGE)==$(VERSION) || true ; popd
 
 
@@ -63,8 +63,6 @@ module:
 
 nuke: ALWAYS
 	make clean
-	rm -Rf $(shell find $(PACKAGE) | awk '/__pycache__$$/')
-	rm -Rf $(shell find test/ | awk '/__pycache__$$/')
 
 
 package:
@@ -91,14 +89,16 @@ resetpy: ALWAYS
 	rm -Rfv ./.Python ./bin ./build ./dist ./include ./lib
 
 
+# TODO: Use rm -Rfv $$(find $(PACKAGE) | awk '/__pycache__$$/') after the poof
+#       package is claimed to this project by PyPI.
 test: ALWAYS
 	@echo "Version = $(VERSION)"
 	pip install -r requirements.txt
 	pip install -e .
 	pytest -v ./tests/test-poof.py
 	pip uninstall -y $(PACKAGE)==$(VERSION) || true
-	rm -Rfv $$(find $(PACKAGE) | awk '/__pycache__$$/')
-	rm -Rfv $$(find test | awk '/__pycache__$$/')
+	rm -Rfv $$(find poof/ | awk '/__pycache__$$/')
+	rm -Rfv $$(find tests | awk '/__pycache__$$/')
 
 
 upload:
@@ -106,3 +106,4 @@ upload:
 
 
 ALWAYS:
+
