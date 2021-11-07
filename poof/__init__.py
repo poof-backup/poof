@@ -22,7 +22,7 @@ import click
 
 # *** constants ***
 
-__VERSION__ = "1.1.7"
+__VERSION__ = "1.2.0"
 
 RCLONE_PROG      = 'rclone'
 RCLONE_PROG_TEST = 'ls' # a program we know MUST exist to the which command
@@ -47,6 +47,14 @@ POOF_CONFIG_FILES = {
     'poof.conf': os.path.join(POOF_CONFIG_DIR, 'poof.conf'),
     'rclone-poof.conf': os.path.join(POOF_CONFIG_DIR, 'rclone-poof.conf'),
 }
+_CRYPT_BOGUS_SECRETS = {
+    'password': 'BOGUS-PASSWORD',
+    'password2': 'BOGUS-PASSWORD2',
+
+}
+_S3_BOGUS_SECRETS = {
+    'secret_access_key': 'BOGUS-SECRET-KEY-USE-YOURS',
+}
 
 
 # --- states ---
@@ -59,7 +67,10 @@ class PoofStatus(Enum):
     INVALID_CLONING_CONFIG  = 4
     MISSING_CLONING_PROGRAM = 5
     MISSING_CONFIG_FILE     = 6
+    ENCRYPTION_ENABLED      = 7
+    ENCRYPTION_DISABLED     = 8
     WARN_MISCONFIGURED      = 100
+    ERROR_MISSING_KEY       = 200
 
 
 class Configuration(object):
@@ -99,7 +110,7 @@ def _initializeConfigIn(confFile, confDir):
                 'bucket': 'poofbackup-%s-%s' % (os.environ['USER'], bucketID),
                 'confFile': confFile,
                 'paths': paths,
-                'remote': 'my-poof', # rclone .INI section
+                'remote': 'poof-backup',
             }
             json.dump(basicConfig, outputFile, indent = 2, sort_keys = True)
         os.chmod(confFile, stat.S_IRUSR | stat.S_IWUSR)
@@ -108,7 +119,7 @@ def _initializeConfigIn(confFile, confDir):
 def _initCloningScaffold():
     conf = configparser.ConfigParser()
 
-    section  = 'my-poof'
+    section  = 'poof-backup'
     scaffold = {
         'type': 's3',
         'provider': 'AWS',
@@ -149,21 +160,29 @@ def die(message, exitCode = 0):
 # TODO:  use the Python API instead of calling external OS-levels commands here?
 #        Neither rm -P nor srm are standard, and neither has much effect on
 #        actual security since they don't work on SSDs anyway.
+#
+#        https://github.com/poof-backup/poof/issues/59
 def _getNukeDirectoryArgsMac(path):
 	args = (
 		'/bin/rm',
-		'-Prfv',
+		'-Prf',
 		path,
 	)
 	return args
 
+
 def _getNukeDirectoryArgsLinux(path):
 	args = (
 		'/bin/rm',
-		'-Rfv',
+		'-Rf',
 		path,
 	)
 	return args
+
+
+def _getNukeDirectoryArgsWindows(path):
+    raise NotImplementedError
+
 
 def _nukeDirectory(path):
     result = False
@@ -194,6 +213,7 @@ def _config(confFiles = POOF_CONFIG_FILES, confDir = POOF_CONFIG_DIR):
 
     return actualConfiguration
 
+
 @main.command()
 @globalConf
 def config(conf):
@@ -203,19 +223,32 @@ Ensure that the poof.conf file exists;  creates it if not present.
     return _config(conf.confFiles, conf.confDir)
 
 
+def _encryptionIsEnabled(poofConf, cloneConf):
+    enabled = False
+
+    for section in cloneConf.sections():
+        if cloneConf[section]['type'] == 'crypt' and cloneConf[section]['password'] != 'BOGUS-PASSWORD' and poofConf['remote'] == section:
+            enabled = True
+            break
+
+    return enabled
+
+
 def _clone(toCloud, confDir = POOF_CONFIG_DIR, confFiles = POOF_CONFIG_FILES, nukeLocal = True):
     _, status = _verify(confFiles = confFiles)
 
     if status != PoofStatus.OK:
         die("cannot poof the files to the cloud", 4)
 
-    conf    = _config(confFiles = confFiles)
-    poofDir = None
+    conf      = _config(confFiles = confFiles)
+    poofDir   = None
+    cloneConf = _cconfig(confFiles, confDir)
 
     for localDir, cloudDir in conf['paths'].items():
         if localDir.endswith(os.sep):
             localDir = localDir[:-1]
 
+        cloudPath = '%s:%s' % (conf['remote'], cloudDir) if _encryptionIsEnabled(conf, cloneConf) else '%s:%s/%s' % (conf['remote'], conf['bucket'], cloudDir)
         if toCloud:
             args = ( RCLONE_PROG,
                     '--config',
@@ -224,11 +257,10 @@ def _clone(toCloud, confDir = POOF_CONFIG_DIR, confFiles = POOF_CONFIG_FILES, nu
                     '-L',
                     'sync',
                     localDir,
-                    '%s:%s/%s' % (conf['remote'], conf['bucket'], cloudDir),
+                    cloudPath,
                   )
             processingItem = localDir
         else:
-            cloudPath ='%s:%s/%s' % (conf['remote'], conf['bucket'], cloudDir)
             args = ( RCLONE_PROG,
                     '--config',
                     confFiles['rclone-poof.conf'],
@@ -319,7 +351,7 @@ def _neuter(confDir = POOF_CONFIG_DIR, unitTest = False):
     if not unitTest:
         try:
             args = (
-                'pip',
+                'pip3',
                 'uninstall',
                 '-y',
                 'poof',
@@ -372,7 +404,7 @@ Ensure that the rclone-poof.conf file exists; creates it if not present.
 
 
 def _econfig(confFiles = POOF_CONFIG_FILES, confDir = POOF_CONFIG_DIR, password1 = None, password2 = None):
-    return False
+    raise NotImplementedError
 
 
 @main.command()
@@ -380,7 +412,23 @@ def econfig():
     """
     Generate the encrypted rclone configuration scaffold.
     """
-    _econfig()
+    click.secho('econfig is not implemented', fg = 'bright_red')
+    sys.exit(99)
+
+
+def _verifyBogusValuesIn(component, conf, section, bogusSecrets):
+    for key, bogusValue in bogusSecrets.items():
+        try:
+            if conf[section][key] == bogusValue:
+                status = PoofStatus.WARN_MISCONFIGURED
+                click.echo('configuration %s [%s].%s = %s - %s' % (component, section, key, bogusValue, status))
+                return status
+        except:
+            status = PoofStatus.ERROR_MISSING_KEY
+            click.echo('configuration %s [%s].%s = %s - %s' % (component, section, key, bogusValue, status))
+            return status
+
+    return PoofStatus.OK
 
 
 def _verify(component = RCLONE_PROG, confFiles = POOF_CONFIG_FILES, allComponents = True):
@@ -412,17 +460,26 @@ def _verify(component = RCLONE_PROG, confFiles = POOF_CONFIG_FILES, allComponent
 
         # heuristic:
         cloningConf = _cconfig(confFiles, POOF_CONFIG_DIR)
-        for section in cloningConf.sections():
-            if cloningConf.get(section, 'secret_access_key') == 'BOGUS-SECRET-KEY-USE-YOURS':
-                component = confFiles['rclone-poof.conf']
-                status    = PoofStatus.WARN_MISCONFIGURED
-                click.echo('configuration %s? - %s' % (component, status))
 
-                return component, status
+        component = confFiles['rclone-poof.conf']
+        for section in cloningConf.sections():
+            if cloningConf[section]['type'] == 'crypt':
+                status = _verifyBogusValuesIn(component, cloningConf, section, _CRYPT_BOGUS_SECRETS)
+                if status is not PoofStatus.OK:
+                    return component, status
+
+            if cloningConf[section]['type'] == 's3':
+                status = _verifyBogusValuesIn(component, cloningConf, section, _S3_BOGUS_SECRETS)
+                if status is not PoofStatus.OK:
+                    return component, status
+
+        encryptionEnabled = PoofStatus.ENCRYPTION_ENABLED if _encryptionIsEnabled(poofConf, cloningConf) else PoofStatus.ENCRYPTION_DISABLED
+        click.echo('encryption enabled? - %s' % encryptionEnabled)
 
         click.echo('configuration appears to be valid and has valid credentials')
 
     return None, status
+
 
 @main.command()
 @click.option('--component', default = RCLONE_PROG, help = 'Component to check', show_default = True)
@@ -440,3 +497,14 @@ def version(_):
     Print software version and exit.
     """
     click.echo('poof version %s' % (__VERSION__))
+
+
+@main.command()
+@globalConf
+def cryptoggle(_):
+    """
+    Toggle remote target encryption ON/OFF
+    """
+    click.secho('cryptoggle is not implemented', fg = 'bright_red')
+    sys.exit(99)
+

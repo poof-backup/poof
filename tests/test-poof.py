@@ -9,13 +9,20 @@ from click.testing import CliRunner
 
 from poof import PoofStatus
 from poof import RCLONE_PROG_TEST
+from poof import _CRYPT_BOGUS_SECRETS
+from poof import _S3_BOGUS_SECRETS
 from poof import _cconfig
 from poof import _config
 from poof import _econfig
+from poof import _encryptionIsEnabled
+from poof import _getNukeDirectoryArgsLinux
+from poof import _getNukeDirectoryArgsMac
+from poof import _getNukeDirectoryArgsWindows
 from poof import _neuter
 from poof import _nukeDirectory
 from poof import _timeLapsed
 from poof import _verify
+from poof import _verifyBogusValuesIn
 from poof import die
 from poof import paths
 
@@ -66,7 +73,7 @@ def test__config():
 def test__cconfig():
     conf = _cconfig(TEST_POOF_CONF_FILES, TEST_POOF_CONF_DIR)
 
-    assert conf.get('my-poof', 'type') == TEST_CLOUD_TYPE
+    assert conf.get('poof-backup', 'type') == TEST_CLOUD_TYPE
 
 
 def test__timeLapsed():
@@ -87,6 +94,21 @@ def test__timeLapsed():
     assert hours == 1
     assert minutes == 0
     assert seconds == 1
+
+
+def test__verifyBogusValuesIn():
+    component    = RCLONE_PROG_TEST
+    conf         = _cconfig(TEST_POOF_CONF_FILES, TEST_POOF_CONF_DIR)
+    section      = 'poof-backup'
+    bogusSecrets = copy.deepcopy(_S3_BOGUS_SECRETS)
+    assert _verifyBogusValuesIn(component, conf, section, bogusSecrets) == PoofStatus.WARN_MISCONFIGURED
+
+    bogusSecrets['secret_access_key'] = 'bogus-access-key-not-default'
+    assert _verifyBogusValuesIn(component, conf, section, bogusSecrets) == PoofStatus.OK
+
+    bogusSecrets = copy.deepcopy(_CRYPT_BOGUS_SECRETS)
+    section      = 'poof-backup'
+    assert _verifyBogusValuesIn(component, conf, section, bogusSecrets) == PoofStatus.ERROR_MISSING_KEY
 
 
 def test__verify():
@@ -149,6 +171,28 @@ def test_paths():
     assert CliRunner().invoke(paths)
 
 
+def test__getNukeDirectoryArgsMac():
+    path = '/tmp/bogus'
+    argsList = _getNukeDirectoryArgsMac(path)
+    x = type(argsList)
+    assert isinstance(argsList, tuple)
+    assert argsList[1] == '-Prf'
+
+
+def test__getNukeDirectoryArgsLinux():
+    path = '/tmp/bogus'
+    argsList = _getNukeDirectoryArgsLinux(path)
+    assert isinstance(argsList, tuple)
+    assert argsList[1] == '-Rf'
+
+
+def test__getNukeDirectoryArgsWindows():
+    path = '/tmp/bogus'
+    with pytest.raises(NotImplementedError):
+        _getNukeDirectoryArgsWindows(path)
+        pass
+
+
 def test__nukeDirectory():
     bogusDir = os.path.join(TEST_POOF_CONF_DIR, 'bogusxxxxx1213')
     status, error = _nukeDirectory(bogusDir)
@@ -160,5 +204,25 @@ def test__nukeDirectory():
 
 
 def test__econfig():
-    assert not _econfig()
+    with pytest.raises(NotImplementedError):
+        _econfig()
+        pass
+
+
+def test__encryptionIsEnabled():
+    poofConf = _config(TEST_POOF_CONF_FILES, TEST_POOF_CONF_DIR)
+    cloneConf = _cconfig(TEST_POOF_CONF_FILES, TEST_POOF_CONF_DIR)
+
+    assert not _encryptionIsEnabled(poofConf, cloneConf)
+
+    cloneConf['poof-crypt'] = {
+        'type': 'crypt',
+        'remote': 'bogus-remote',
+        'password': 'bogus-password-not-default',
+        'password2': 'bogus-password2-not-default',
+    }
+
+    poofConf['remote'] = 'poof-crypt'
+
+    assert _encryptionIsEnabled(poofConf, cloneConf)
 

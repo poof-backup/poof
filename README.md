@@ -18,6 +18,10 @@ _Experimental versions of `poof` leverage other operating system and third-party
 tools, discussed in the documentation.  For details, see the [`poof` GitHub 
 repository](https://github.com/poof-backup/poof)._
 
+This document contains diagrams and screen captures not visible in PyPI.  Please
+refer to the original document at **https://github.com/poof-backup/poof#readme**
+if you need to refer to them.
+
 
 ## One-time set up
 
@@ -177,6 +181,125 @@ To restore a backup from the cloud to the local file system:
 The file system synchronization process may take from a few minutes to several
 hours, depending on the number of files involved, the lengt of the files, and
 the connection speed.
+
+
+## Encrypted backups/uploads
+
+`poof` leverages `rclone` encrypted remotes, if they are defined and available,
+beginning with version **1.2.0**.  Future releases will implement *crypt*
+configuration generators from within `poof`, for now this relies on `rclone`
+until automation, key storage, and operational security issues are resolved.
+
+Encryption details:
+
+1. File content encryption uses [NaCl SecretBox](https://pkg.go.dev/golang.org/x/crypto/nacl/secretbox) 
+1. File and directory names are separated by '/', padded to a multiple of 16
+   bytes, then encrypted with EME and AES with a 256-bit key.
+
+Implications:
+
+- File and directory names with the same exact name will encrypt the same way
+- File and directory names which start the same won't have a common prefix
+- All names are encrypted to lower case alphanumeric strings
+- Padding characters (e.g. =) are stripped
+- Supports case-insensitve remotes (e.g. Windows)
+
+The `rclone` Crypt documentation provides a thorough discussion of [how the
+`crypt` remote implementation works](https://rclone.org/crypt).
+
+
+### Pre-requisites
+
+1. Working `poof` configuration
+1. Working `rclone` configuration for poof with a working type *crypt* remote
+
+Sample `poof.conf`:
+
+```js
+{
+  "bucket": "poofbackup-joe-user-206ce7879351",
+  "confFile": "/Users/joe-user/Library/Application Support/poof/poof.conf",
+  "paths": {
+    "/Users/joe-user/CryptoWallet": "CryptoWallet",
+    "/Users/joe-user/Documents": "Documents",
+    "/Users/joe-user/Downloads": "Downloads",
+    "/Users/joe-user/Library/Application Support/poof": "poof-conf"
+  },
+  "remote": "poof-backup"
+}
+```
+
+Sample valid `rclone-poof.conf`.  The `[poof-crypt[` section was generated using
+`rclone` configuration for the password.  Notice that the remote definition uses
+the target bucket in `poof.conf`:
+
+```
+[poof-backup]
+type = s3
+provider = AWS
+env_auth = false
+access_key_id = BOGUS-KEY-USE-YOURS
+secret_access_key = BOGUS-SECRET-KEY-USE-YOURS
+region = eu-west-1
+location_constraint = eu-west-1
+acl = private
+storage_class = STANDARD_IA
+chunk_size = 8M
+upload_concurrency = 2
+server_side_encryption = AES256
+
+[poof-crypt]
+type = crypt
+remote = poof:poofbackup-joe-user-206ce7879351
+password = BOGUS-PASSWORD
+password2 = BOGUS-PASSWORD2
+
+```
+
+
+### Enabling and disabling encryption
+
+Enabling and disabling encryption is accomplished by editing the `remote`
+attribute in the `poof` configuration file, to point at the `poof-crypt` remote
+instead of the `poof-backup` remote.
+
+```json
+{
+  "bucket": "poofbackup-joe-user-206ce7879351",
+  "confFile": "/Users/joe-user/Library/Application Support/poof/poof.conf",
+  "paths": {
+    "/Users/joe-user/CryptoWallet": "CryptoWallet",
+    "/Users/joe-user/Documents": "Documents",
+    "/Users/joe-user/Downloads": "Downloads",
+    "/Users/joe-user/Library/Application Support/poof": "poof-conf"
+  },
+  "remote": "poof-crypt"
+}
+```
+
+Running the upload or backup commands copies the files and directories to the
+cloud storage using encrypted directory and file names, and encrypting the files
+to prevent unauthorized viewing by the cloud storage provider:
+
+```zsh
+poof backup
+```
+
+Disabling encryption only requires to point the remote back to the cloud storage
+remote definition, instead of the encrypted remote.
+
+
+### Effects on backup/upload and download
+
+File and directory names are preserved, as in the plaintext backup, in the local
+file system.
+
+File and directory names are encrypted in the cloud storage target.  File names
+are transparent to `poof` and `rclone` - listing the encypted cloud file system
+names with valid credentials shows them in plaintext on the client, but they are
+obfuscated in the remote as described at the beginning of this section.
+
+<img src='assets/sample-S3-dir-list.png'>
 
 
 ## Operational security
