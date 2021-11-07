@@ -299,7 +299,7 @@ are transparent to `poof` and `rclone` - listing the encypted cloud file system
 names with valid credentials shows them in plaintext on the client, but they are
 obfuscated in the remote as described at the beginning of this section.
 
-<img src='assets/sample-S3-dir-list.png'>
+<img src='https://raw.githubusercontent.com/poof-backup/poof/master/assets/sample-S3-dir-list.png'>
 
 
 ## Operational security
