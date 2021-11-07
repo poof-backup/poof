@@ -18,11 +18,12 @@ import sys
 import uuid
 
 import click
+import pyperclip
 
 
 # *** constants ***
 
-__VERSION__ = "1.2.1"
+__VERSION__ = "1.2.2"
 
 RCLONE_PROG      = 'rclone'
 RCLONE_PROG_TEST = 'ls' # a program we know MUST exist to the which command
@@ -208,8 +209,12 @@ def _config(confFiles = POOF_CONFIG_FILES, confDir = POOF_CONFIG_DIR):
     confFile = confFiles['poof.conf']
     _initializeConfigIn(confFile, confDir)
 
-    with open(confFile, 'r') as inputFile:
-        actualConfiguration = json.load(inputFile)
+    configStr = open(confFile, 'r').read()
+    actualConfiguration = json.loads(configStr)
+
+    click.secho(configStr)
+
+    pyperclip.copy(configStr)
 
     return actualConfiguration
 
@@ -388,9 +393,12 @@ def _cconfig(confFiles = POOF_CONFIG_FILES, confDir = POOF_CONFIG_DIR):
     confFile = confFiles['rclone-poof.conf']
     _initializeCloningConfigIn(confFile, confDir)
 
+    cloningConfStr = open(confFile, 'r').read()
     cloningConf = configparser.ConfigParser()
-    with open(confFile, 'r') as inputFile:
-        cloningConf.read_file(inputFile)
+
+    cloningConf.read_string(cloningConfStr)
+    click.secho(cloningConfStr)
+    pyperclip.copy(cloningConfStr)
 
     return cloningConf
 
