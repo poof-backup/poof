@@ -67,6 +67,8 @@ class PoofStatus(Enum):
     INVALID_CLONING_CONFIG  = 4
     MISSING_CLONING_PROGRAM = 5
     MISSING_CONFIG_FILE     = 6
+    ENCRYPTION_ENABLED      = 7
+    ENCRYPTION_DISABLED     = 8
     WARN_MISCONFIGURED      = 100
     ERROR_MISSING_KEY       = 200
 
@@ -212,6 +214,15 @@ def _config(confFiles = POOF_CONFIG_FILES, confDir = POOF_CONFIG_DIR):
     return actualConfiguration
 
 
+@main.command()
+@globalConf
+def config(conf):
+    """
+Ensure that the poof.conf file exists;  creates it if not present.
+"""
+    return _config(conf.confFiles, conf.confDir)
+
+
 def _encryptionIsEnabled(poofConf, cloneConf):
     enabled = False
 
@@ -223,30 +234,22 @@ def _encryptionIsEnabled(poofConf, cloneConf):
     return enabled
 
 
-@main.command()
-@globalConf
-def config(conf):
-    """
-Ensure that the poof.conf file exists;  creates it if not present.
-"""
-    return _config(conf.confFiles, conf.confDir)
-
-
 def _clone(toCloud, confDir = POOF_CONFIG_DIR, confFiles = POOF_CONFIG_FILES, nukeLocal = True):
     _, status = _verify(confFiles = confFiles)
 
     if status != PoofStatus.OK:
         die("cannot poof the files to the cloud", 4)
 
-    conf    = _config(confFiles = confFiles)
-    poofDir = None
+    conf      = _config(confFiles = confFiles)
+    poofDir   = None
+    cloneConf = _cconfig(confFiles, confDir)
 
     for localDir, cloudDir in conf['paths'].items():
         if localDir.endswith(os.sep):
             localDir = localDir[:-1]
 
+        cloudPath = '%s:%s' % (conf['remote'], cloudDir) if _encryptionIsEnabled(conf, cloneConf) else '%s:%s/%s' % (conf['remote'], conf['bucket'], cloudDir)
         if toCloud:
-            # TODO:  Detect if poof.conf files/directories and DO NOT encrypt!
             args = ( RCLONE_PROG,
                     '--config',
                     confFiles['rclone-poof.conf'],
@@ -254,13 +257,10 @@ def _clone(toCloud, confDir = POOF_CONFIG_DIR, confFiles = POOF_CONFIG_FILES, nu
                     '-L',
                     'sync',
                     localDir,
-                    # TODO:  Detect if encrypted config, and use the appropriate args list.
-                    # '%s:%s/%s' % (conf['remote'], conf['bucket'], cloudDir),
-                    '%s:%s' % (conf['remote'], cloudDir),
+                    cloudPath,
                   )
             processingItem = localDir
         else:
-            cloudPath ='%s:%s/%s' % (conf['remote'], conf['bucket'], cloudDir)
             args = ( RCLONE_PROG,
                     '--config',
                     confFiles['rclone-poof.conf'],
@@ -272,7 +272,6 @@ def _clone(toCloud, confDir = POOF_CONFIG_DIR, confFiles = POOF_CONFIG_FILES, nu
             processingItem = cloudPath
 
         click.secho('\nprocessing: %s' % processingItem)
-        click.secho('args = %s' % str(args))
         result = subprocess.run(args)
 
         try:
@@ -413,7 +412,8 @@ def econfig():
     """
     Generate the encrypted rclone configuration scaffold.
     """
-    raise NotImplementedError
+    click.secho('econfig is not implemented', fg = 'bright_red')
+    sys.exit(99)
 
 
 def _verifyBogusValuesIn(component, conf, section, bogusSecrets):
@@ -473,6 +473,9 @@ def _verify(component = RCLONE_PROG, confFiles = POOF_CONFIG_FILES, allComponent
                 if status is not PoofStatus.OK:
                     return component, status
 
+        encryptionEnabled = PoofStatus.ENCRYPTION_ENABLED if _encryptionIsEnabled(poofConf, cloningConf) else PoofStatus.ENCRYPTION_DISABLED
+        click.echo('encryption enabled? - %s' % encryptionEnabled)
+
         click.echo('configuration appears to be valid and has valid credentials')
 
     return None, status
@@ -494,4 +497,14 @@ def version(_):
     Print software version and exit.
     """
     click.echo('poof version %s' % (__VERSION__))
+
+
+@main.command()
+@globalConf
+def cryptoggle(_):
+    """
+    Toggle remote target encryption ON/OFF
+    """
+    click.secho('cryptoggle is not implemented', fg = 'bright_red')
+    sys.exit(99)
 
