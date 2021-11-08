@@ -6,6 +6,7 @@ from datetime import timedelta
 from unittest.mock import patch
 
 from click.testing import CliRunner
+from pyperclip import PyperclipException
 
 from poof import PoofStatus
 from poof import RCLONE_PROG_TEST
@@ -32,6 +33,7 @@ import os
 import shutil
 import sys
 
+import pyperclip
 import pytest
 
 
@@ -69,11 +71,27 @@ def test__config():
     assert poofConf['confFile'] == poofConfFile
     assert TEST_POOF_CONF_DIR in poofConf['paths']
 
+    confStrSource = open(poofConfFile, 'r').read()
+
+    try:
+        confStrTarget = pyperclip.paste()
+        assert confStrSource == confStrTarget
+    except PyperclipException:
+        pass # Linux
+
 
 def test__cconfig():
     conf = _cconfig(TEST_POOF_CONF_FILES, TEST_POOF_CONF_DIR)
 
     assert conf.get('poof-backup', 'type') == TEST_CLOUD_TYPE
+
+    confStrSource = open(TEST_POOF_CONF_FILES['rclone-poof.conf'], 'r').read()
+
+    try:
+        confStrTarget = pyperclip.paste()
+        assert confStrSource == confStrTarget
+    except PyperclipException:
+        pass # Linux
 
 
 def test__timeLapsed():
@@ -174,7 +192,6 @@ def test_paths():
 def test__getNukeDirectoryArgsMac():
     path = '/tmp/bogus'
     argsList = _getNukeDirectoryArgsMac(path)
-    x = type(argsList)
     assert isinstance(argsList, tuple)
     assert argsList[1] == '-Prf'
 
@@ -225,4 +242,7 @@ def test__encryptionIsEnabled():
     poofConf['remote'] = 'poof-crypt'
 
     assert _encryptionIsEnabled(poofConf, cloneConf)
+
+
+test__cconfig()
 

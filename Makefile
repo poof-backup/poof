@@ -19,7 +19,6 @@ VERSION=$(shell echo "from poof import __VERSION__; print(__VERSION__)" | python
 all: ALWAYS
 	make test
 	make package
-	make upload
 
 
 # TODO: Use rm -Rfv $$(find $(PACKAGE) | awk '/__pycache__$$/') after the poof
@@ -52,7 +51,6 @@ libupdate:
 
 
 local:
-	make package
 	pip install -e .
 
 
