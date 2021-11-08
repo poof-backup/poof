@@ -6,6 +6,7 @@ from datetime import timedelta
 from unittest.mock import patch
 
 from click.testing import CliRunner
+from pyperclip import PyperclipException
 
 from poof import PoofStatus
 from poof import RCLONE_PROG_TEST
@@ -71,10 +72,12 @@ def test__config():
     assert TEST_POOF_CONF_DIR in poofConf['paths']
 
     confStrSource = open(poofConfFile, 'r').read()
-    confStrTarget = pyperclip.paste()
 
-    assert confStrSource == confStrTarget
-
+    try:
+        confStrTarget = pyperclip.paste()
+        assert confStrSource == confStrTarget
+    except PyperclipException:
+        pass # Linux
 
 
 def test__cconfig():
@@ -83,10 +86,12 @@ def test__cconfig():
     assert conf.get('poof-backup', 'type') == TEST_CLOUD_TYPE
 
     confStrSource = open(TEST_POOF_CONF_FILES['rclone-poof.conf'], 'r').read()
-    confStrTarget = pyperclip.paste()
 
-    assert confStrSource == confStrTarget
-
+    try:
+        confStrTarget = pyperclip.paste()
+        assert confStrSource == confStrTarget
+    except PyperclipException:
+        pass # Linux
 
 
 def test__timeLapsed():

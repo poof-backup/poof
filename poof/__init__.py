@@ -6,6 +6,7 @@ from datetime import datetime
 from enum import Enum
 
 from appdirs import AppDirs
+from pyperclip import PyperclipException
 
 import configparser
 import json
@@ -205,16 +206,19 @@ def _nukeDirectory(path):
     return result, error
 
 
-def _config(confFiles = POOF_CONFIG_FILES, confDir = POOF_CONFIG_DIR, showConf = True):
+def _config(confFiles = POOF_CONFIG_FILES, confDir = POOF_CONFIG_DIR):
     confFile = confFiles['poof.conf']
     _initializeConfigIn(confFile, confDir)
 
     configStr = open(confFile, 'r').read()
     actualConfiguration = json.loads(configStr)
 
-    if showConf:
-        click.secho(configStr)
+    click.secho(configStr)
+
+    try:
         pyperclip.copy(configStr)
+    except PyperclipException:
+        pass # Linux?
 
     return actualConfiguration
 
@@ -245,9 +249,9 @@ def _clone(toCloud, confDir = POOF_CONFIG_DIR, confFiles = POOF_CONFIG_FILES, nu
     if status != PoofStatus.OK:
         die("cannot poof the files to the cloud", 4)
 
-    conf      = _config(confFiles = confFiles, showConf = False)
+    conf      = _config(confFiles = confFiles)
     poofDir   = None
-    cloneConf = _cconfig(confFiles, confDir, showConf = False)
+    cloneConf = _cconfig(confFiles, confDir)
 
     for localDir, cloudDir in conf['paths'].items():
         if localDir.endswith(os.sep):
@@ -389,7 +393,7 @@ Upload all the files to the cloud drive and delete the local paths.
     return outcome
 
 
-def _cconfig(confFiles = POOF_CONFIG_FILES, confDir = POOF_CONFIG_DIR, showConf = True):
+def _cconfig(confFiles = POOF_CONFIG_FILES, confDir = POOF_CONFIG_DIR):
     confFile = confFiles['rclone-poof.conf']
     _initializeCloningConfigIn(confFile, confDir)
 
@@ -397,10 +401,11 @@ def _cconfig(confFiles = POOF_CONFIG_FILES, confDir = POOF_CONFIG_DIR, showConf 
     cloningConf = configparser.ConfigParser()
 
     cloningConf.read_string(cloningConfStr)
-
-    if showConf:
-        click.secho(cloningConfStr)
+    click.secho(cloningConfStr)
+    try:
         pyperclip.copy(cloningConfStr)
+    except PyperclipException:
+        pass # Linux?
 
     return cloningConf
 
@@ -460,7 +465,7 @@ def _verify(component = RCLONE_PROG, confFiles = POOF_CONFIG_FILES, allComponent
                 return component, status
 
         # heuristic:
-        poofConf = _config(confFiles, POOF_CONFIG_DIR, False)
+        poofConf = _config(confFiles, POOF_CONFIG_DIR)
         if len(poofConf['paths']) == 1:
             component = 'poof.conf'
             status    = PoofStatus.WARN_MISCONFIGURED
@@ -469,7 +474,7 @@ def _verify(component = RCLONE_PROG, confFiles = POOF_CONFIG_FILES, allComponent
             return component, status
 
         # heuristic:
-        cloningConf = _cconfig(confFiles, POOF_CONFIG_DIR, False)
+        cloningConf = _cconfig(confFiles, POOF_CONFIG_DIR)
 
         component = confFiles['rclone-poof.conf']
         for section in cloningConf.sections():
