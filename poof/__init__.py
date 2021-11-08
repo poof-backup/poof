@@ -6,6 +6,7 @@ from datetime import datetime
 from enum import Enum
 
 from appdirs import AppDirs
+from pyperclip import PyperclipException
 
 import configparser
 import json
@@ -214,7 +215,10 @@ def _config(confFiles = POOF_CONFIG_FILES, confDir = POOF_CONFIG_DIR):
 
     click.secho(configStr)
 
-    pyperclip.copy(configStr)
+    try:
+        pyperclip.copy(configStr)
+    except PyperclipException:
+        pass # Linux?
 
     return actualConfiguration
 
@@ -398,7 +402,10 @@ def _cconfig(confFiles = POOF_CONFIG_FILES, confDir = POOF_CONFIG_DIR):
 
     cloningConf.read_string(cloningConfStr)
     click.secho(cloningConfStr)
-    pyperclip.copy(cloningConfStr)
+    try:
+        pyperclip.copy(cloningConfStr)
+    except PyperclipException:
+        pass # Linux?
 
     return cloningConf
 
