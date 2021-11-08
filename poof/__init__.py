@@ -250,9 +250,9 @@ def _clone(toCloud, confDir = POOF_CONFIG_DIR, confFiles = POOF_CONFIG_FILES, nu
     if status != PoofStatus.OK:
         die("cannot poof the files to the cloud", 4)
 
-    conf      = _config(confFiles = confFiles)
+    conf      = _config(confFiles = confFiles, showConfig = False)
     poofDir   = None
-    cloneConf = _cconfig(confFiles, confDir)
+    cloneConf = _cconfig(confFiles, confDir, showConfig = False)
 
     for localDir, cloudDir in conf['paths'].items():
         if localDir.endswith(os.sep):
