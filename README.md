@@ -323,7 +323,7 @@ poof! operates within a privacy continuum that ranges from simple data backup
 and restore for safekeeping, to full target encryption and self-destruction in
 case of risk of local system compromise.
 
-<img src='https://raw.githubusercontent.com/poof-backup/poof/0067-config-output-clipboard/assets/backup-continuum.png'>
+<img src='https://raw.githubusercontent.com/poof-backup/poof/master/assets/backup-continuum.png'>
 
 The poof! model covers 4 data security threat levels:
 
@@ -421,7 +421,7 @@ The configuration file also available in the clipboard.  You may verify this by
 pasting into any text editor, or using your GUI's tools for viewing the
 clipboard.
 
-<img src='https://raw.githubusercontent.com/poof-backup/poof/0067-config-output-clipboard/assets/poof_conf-clipboard-sample.png'>
+<img src='https://raw.githubusercontent.com/poof-backup/poof/master/assets/poof_conf-clipboard-sample.png'>
 
 
 Generate these files, store them in a safe place, separate from the cloud
