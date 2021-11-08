@@ -1,13 +1,14 @@
 # poof backup
 
-poof backup - 2-way secure data sync/backup/restore against a cloud drive.
+poof backup - 2-way secure data sync/backup/restore against cloud storage.
 
-Backup of local file system directories to a cloud drive or other storage, in a
+Backup of local file system directories to cloud storage or other storage, in a
 secure manner, and preserving the original files' attributes for later recovery.
 The poof! tool offers additional security options:
 
 - Secure delete the local file system files upon successful process completion
 - Encrypt the remote copies
+- Eliminates all traces of itself in the local file system
 
 poof! leverages tried-and-true tools to perform its tasks:
 
@@ -15,12 +16,8 @@ poof! leverages tried-and-true tools to perform its tasks:
   cloud storage.
 
 _Experimental versions of `poof` leverage other operating system and third-party
-tools, discussed in the documentation.  For details, see the [`poof` GitHub 
+tools, discussed in this documentation.  For details, see the [`poof` GitHub 
 repository](https://github.com/poof-backup/poof)._
-
-This document contains diagrams and screen captures not visible in PyPI.  Please
-refer to the original document at **https://github.com/poof-backup/poof#readme**
-if you need to refer to them.
 
 
 ## One-time set up
@@ -36,9 +33,18 @@ if you need to refer to them.
 Use `pip` or `pip3` to install in the current Python scope (system or virtual
 environment):
 
-```
+```zsh
 pip3 install poof
 ```
+
+### Installing `rclone`
+
+Install `rclone` in your system via https://rclone.org/install/
+
+`rclone` makes an identical copy of directories and their contents to the
+desired cloud storage, including the correct time stamps and permissions.  It's 
+a more reliable mechanism than building that logic in `poof`.
+
 
 ### Configuration
 
@@ -52,7 +58,8 @@ For the first time `poof` configuration, run:
 poof verify
 ```
 
-`poof` validates that all component and configuration requirements are satisfied:
+`poof` validates that all component and configuration requirements are
+satisfied:
 
 ```
 installed rclone? - PoofStatus.OK
@@ -61,7 +68,7 @@ exists poof.conf? - PoofStatus.MISSING_CONFIG_FILE
 
 Generate a new, basic `poof` configuration file and validate its contents:
 
-```
+```zsh
 poof config  && poof verify
 ```
 
@@ -75,10 +82,10 @@ exists rclone-poof.conf? - PoofStatus.MISSING_CONFIG_FILE
 ```
 
 The `rclone` configuration file for `poof` is still missing.  Generate a simple
-cloud drive `rclone` configuration file:
+cloud storage `rclone` configuration file:
 
 
-```
+```zsh
 poof cconfig && poof verify
 
 ```
@@ -88,7 +95,7 @@ in addition to the backup of its own configuration, which defaults to `unittest`
 until overridden by the user.
 
 Verification fails because `poof` must have a minimum of two directories to
-backup or upload to the cloud drive:
+backup or upload to the cloud storage:
 
 - A `poof` configuration backup directory
 - One end-user backup directory
@@ -97,7 +104,7 @@ In most cases, `Documents` ought to be the first end-user directory.
 
 List the configuration paths to make the necessary updates:
 
-```
+```zsh
 poof paths
 ```
 
@@ -115,28 +122,29 @@ poof.conf = /home/joe-user/.config/poof/poof.conf
 rclone-poof.conf = /home/joe-user/.config/poof/rclone-poof.conf
 ```
 
-Enter the full path(s) to each directory you wish to back up, no `~` or `$HOME`.  In `poof.conf`:
+Enter the full path(s) to each directory you wish to back up, no `~` or `$HOME`.
+In `poof.conf`:
 
 ```
 {
-  "bucket": "poofbackup",
+  "bucket": "poofbackup-joe-user-206ce7879351",
   "confFile": "/Users/joe-user/Library/Application Support/poof/poof.conf",
   "paths": {
     "/Users/joe-user/Documents": "Documents",
     "/Users/joe-user/Downloads": "Downloads",
     "/Users/joe-user/Library/Application Support/poof": "poof-config"
   },
-  "remote": "my-poof"
+  "remote": "poof-backup"
 }
 ```
 
-Last, configure the appropriate credentials in `rclone.conf` for the cloud drive
-intended for backup.  This example uses an Amazon S3 configuration, replace the
-bogus credentials with your own.
+Last, configure the appropriate credentials in `rclone.conf` for the cloud
+storage intended for backup.  This example uses an Amazon S3 configuration,
+replace the bogus credentials with your own.
 
 Verify the configuation one last time:
 
-```
+```zsh
 poof verify
 ```
 
@@ -150,28 +158,35 @@ configuration appears to be valid and has valid credentials
 ```
 
 
+## IMPORTANT
+
+`poof` creates or updates snapshots of the latest file system contents in the
+local file system or the cloud storage.
+
+**Restoring data from the cloud storage is a destructive operation in the target
+file system.**  This is by design because `poof` clones and synchronizes the
+source file system to the targets.  Backups are never incremental -- they are
+always **_snapshots_**.
+
+
 ## Regular backups
 
-`poof` validates its own configuration before backing up or restoring data.  It
-will fail if its own configuration or any of its required tools configurations
-are invalid.
+`poof` validates its own configuration before backing up/uploading or restoring
+data.  It will fail if its own configuration or any of its required tools
+configurations are invalid.
 
 Run `poof backup` as often as needed or required to copy all the directories in
-the `poof` configuration to the cloud drive.
+the `poof` configuration to the cloud storage.  It may automated via `cron` or
+`launchd`.
+
+
+## Upload
 
 Run `poof upload` when there is need to sync the local file system directories,
-then removing all the local files (selected directories wipe).
-
-Run  `poof download` to sync the local file system with the most current files
-in the cloud drive, as needed or required.
+then removes all the local files and directories (local directories wipe).
 
 
 ## Restore
-
-**Restoring data from the cloud drive is a destructive operation in the target
-file system.**  This is by design because `poof` clones and synchronizes the
-source file system to the targets.  Backups are never incremental -- they are
-considered to be "snapshots" in all cases.
 
 To restore a backup from the cloud to the local file system:
 
@@ -215,7 +230,7 @@ The `rclone` Crypt documentation provides a thorough discussion of [how the
 
 Sample `poof.conf`:
 
-```js
+```json
 {
   "bucket": "poofbackup-joe-user-206ce7879351",
   "confFile": "/Users/joe-user/Library/Application Support/poof/poof.conf",
@@ -233,7 +248,7 @@ Sample valid `rclone-poof.conf`.  The `[poof-crypt[` section was generated using
 `rclone` configuration for the password.  Notice that the remote definition uses
 the target bucket in `poof.conf`:
 
-```
+```ini
 [poof-backup]
 type = s3
 provider = AWS
@@ -304,7 +319,114 @@ obfuscated in the remote as described at the beginning of this section.
 
 ## Operational security
 
-_Section under development._
+poof! operates within a privacy continuum that ranges from simple data backup
+and restore for safekeeping, to full target encryption and self-destruction in
+case of risk of local system compromise.
+
+<img src='https://raw.githubusercontent.com/poof-backup/poof/0067-config-output-clipboard/assets/backup-continuum.png'>
+
+The poof! model covers 4 data security threat levels:
+
+
+### Level 1:  backup and restore
+
+As a user, I want to make periodic backups of one or more local file system
+directories, and trust or otherwise have no privacy concerns regarding the cloud
+storage provider.
+
+
+### Level 2:  upload and restore
+
+As a user, I need to make a backup of my local directories but need to wipe them
+out upon completion.  I trust or otherwise have no privacy concerns regarding
+the cloud storage provider.
+
+Examples:
+
+- Bought a new computer and must move the data directories from the old to the
+  new system
+- The current system must be surrendered to a distrusted third-party like a
+  repair shop
+
+
+### Configuration info for threat levels 1 and 2
+
+The `poof.conf` and `rclone-poof.conf` configuration files are uploaded to the
+cloud if the poof! configuration file is included as part of the configuration.
+These files are stored in plaintext in the cloud storage, and can be viewed or
+downloaded by anyone with access permissions.
+
+
+### Level 3:  crypt backup, restore
+
+As a user, I want to make periodic backups of one or more local system
+directories, and do not trust the cloud storage provider.
+
+In this situation, the user may distrust the storage provider and wants to
+prevent their data from being mined or otherwise accessed without authorization.
+
+
+### Level 4:  crypt upload, restore
+
+As a user, I need to make a backup of my local directories but need to wipe them
+out upon completion.  I do not trust the cloud storage provider.
+
+- Bought a new computer and must move the data directories from the old to the
+  new system
+- The current system must be surrendered to a distrusted third-party like a
+  repair shop
+
+
+### Configuration info for threat levels 3 and 4
+
+The poof! configuration files are stored in plaintext in the local file system,
+but are encrypted if uploaded to the cloud storage if they are in the `poof.conf`
+configuration file.
+
+In the case of level 4 threat, `poof upload` will also wipe out its own
+configuration, and remove itself and all its dependencies from the local file
+system.  `rclone` is installed because there may be other legitimate uses for it
+other than `poof` integration.
+
+
+### Preserving the poof! configuration for threat level 4
+
+The `config` and `cconfig` commands display the current configuration and copy
+the configuration files to the clipboard.  The user may then store them in a 
+separate, secure, unrelated system for later restoring the files.  For example,
+this command:
+
+```zsh
+poof config
+```
+
+Displays the configuration:
+
+```
+{
+  "bucket": "poofbackup-joe-user-206ce7879351",
+  "confFile": "/Users/joe-user/Library/Application Support/poof/poof.conf",
+  "paths": {
+    "/Users/joe-user/CryptoWallet": "CryptoWallet",
+    "/Users/joe-user/Documents": "Documents",
+    "/Users/joe-user/Downloads": "Downloads",
+    "/Users/joe-user/Library/Application Support/poof": "poof-conf"
+  },
+  "remote": "poof-crypt"
+}
+
+```
+
+The configuration file also available in the clipboard.  You may verify this by
+pasting into any text editor, or using your GUI's tools for viewing the
+clipboard.
+
+<img src='https://raw.githubusercontent.com/poof-backup/poof/0067-config-output-clipboard/assets/poof_conf-clipboard-sample.png'>
+
+
+Generate these files, store them in a safe place, separate from the cloud
+storage holding your backups or the system that you backed up, and use them to
+restore your data to a secure, safe system, when the threat level drops.
 
 
 ## Requirements
@@ -316,14 +438,6 @@ _Section under development._
 _Note:_ `poof` may work well under Windows file systems but it hasn't been
 tested at the time this README was posted.
 
-
-### Installing `rclone`
-
-Install `rclone` in your system via https://rclone.org/install/
-
-`rclone` makes an identical copy of directories and their contents to the
-desired cloud drive, including the correct time stamps and permissions.  It's 
-a more reliable mechanism than building that logic in `poof`.
 
 
 ---
