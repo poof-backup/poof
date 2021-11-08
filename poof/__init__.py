@@ -205,16 +205,16 @@ def _nukeDirectory(path):
     return result, error
 
 
-def _config(confFiles = POOF_CONFIG_FILES, confDir = POOF_CONFIG_DIR):
+def _config(confFiles = POOF_CONFIG_FILES, confDir = POOF_CONFIG_DIR, showConf = True):
     confFile = confFiles['poof.conf']
     _initializeConfigIn(confFile, confDir)
 
     configStr = open(confFile, 'r').read()
     actualConfiguration = json.loads(configStr)
 
-    click.secho(configStr)
-
-    pyperclip.copy(configStr)
+    if showConf:
+        click.secho(configStr)
+        pyperclip.copy(configStr)
 
     return actualConfiguration
 
@@ -245,9 +245,9 @@ def _clone(toCloud, confDir = POOF_CONFIG_DIR, confFiles = POOF_CONFIG_FILES, nu
     if status != PoofStatus.OK:
         die("cannot poof the files to the cloud", 4)
 
-    conf      = _config(confFiles = confFiles)
+    conf      = _config(confFiles = confFiles, showConf = False)
     poofDir   = None
-    cloneConf = _cconfig(confFiles, confDir)
+    cloneConf = _cconfig(confFiles, confDir, showConf = False)
 
     for localDir, cloudDir in conf['paths'].items():
         if localDir.endswith(os.sep):
@@ -389,7 +389,7 @@ Upload all the files to the cloud drive and delete the local paths.
     return outcome
 
 
-def _cconfig(confFiles = POOF_CONFIG_FILES, confDir = POOF_CONFIG_DIR):
+def _cconfig(confFiles = POOF_CONFIG_FILES, confDir = POOF_CONFIG_DIR, showConf = True):
     confFile = confFiles['rclone-poof.conf']
     _initializeCloningConfigIn(confFile, confDir)
 
@@ -397,8 +397,10 @@ def _cconfig(confFiles = POOF_CONFIG_FILES, confDir = POOF_CONFIG_DIR):
     cloningConf = configparser.ConfigParser()
 
     cloningConf.read_string(cloningConfStr)
-    click.secho(cloningConfStr)
-    pyperclip.copy(cloningConfStr)
+
+    if showConf:
+        click.secho(cloningConfStr)
+        pyperclip.copy(cloningConfStr)
 
     return cloningConf
 
@@ -458,7 +460,7 @@ def _verify(component = RCLONE_PROG, confFiles = POOF_CONFIG_FILES, allComponent
                 return component, status
 
         # heuristic:
-        poofConf = _config(confFiles, POOF_CONFIG_DIR)
+        poofConf = _config(confFiles, POOF_CONFIG_DIR, False)
         if len(poofConf['paths']) == 1:
             component = 'poof.conf'
             status    = PoofStatus.WARN_MISCONFIGURED
@@ -467,7 +469,7 @@ def _verify(component = RCLONE_PROG, confFiles = POOF_CONFIG_FILES, allComponent
             return component, status
 
         # heuristic:
-        cloningConf = _cconfig(confFiles, POOF_CONFIG_DIR)
+        cloningConf = _cconfig(confFiles, POOF_CONFIG_DIR, False)
 
         component = confFiles['rclone-poof.conf']
         for section in cloningConf.sections():
