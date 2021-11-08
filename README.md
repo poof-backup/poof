@@ -380,16 +380,16 @@ out upon completion.  I do not trust the cloud storage provider.
 ### Configuration info for threat levels 3 and 4
 
 The poof! configuration files are stored in plaintext in the local file system,
-but are encrypted if uploaded to the cloud storage if they are in the `poof.conf`
+but are encrypted in the cloud storage if they are present in the `poof.conf`
 configuration file.
 
-In the case of level 4 threat, `poof upload` will also wipe out its own
+In the case of a level 4 threat, `poof upload` will also wipe out its own
 configuration, and remove itself and all its dependencies from the local file
-system.  `rclone` is installed because there may be other legitimate uses for it
-other than `poof` integration.
+system.  `rclone` is left alone because there may be other legitimate uses for
+it other than `poof` integration.
 
 
-### Preserving the poof! configuration for threat level 4
+### Preserving the poof! configuration for threat levels 3 and 4
 
 The `config` and `cconfig` commands display the current configuration and copy
 the configuration files to the clipboard.  The user may then store them in a 
