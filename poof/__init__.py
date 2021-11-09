@@ -24,7 +24,7 @@ import pyperclip
 
 # *** constants ***
 
-__VERSION__ = "1.2.2"
+__VERSION__ = "1.2.4"
 
 RCLONE_PROG      = 'rclone'
 RCLONE_PROG_TEST = 'ls' # a program we know MUST exist to the which command
@@ -330,8 +330,7 @@ Backup to remote without wiping out the local data.
 @globalConf
 def download(conf):
     """
-Download the files from the cloud and set them in their corresponding
-directories.
+Download the files from the cloud storage into their corresponding directories.
 """
     click.echo(click.style('DOWNLOAD SYNC IN PROGRESS - PLEASE DO NOT INTERRUPT', fg='yellow'))
     outcome = _clone(False, confDir = conf.confDir, confFiles = conf.confFiles)
@@ -375,7 +374,7 @@ def _neuter(confDir = POOF_CONFIG_DIR, unitTest = False):
 @globalConf
 def neuter(conf):
     """
-Neuter this poof installation by deleting its configuration.
+Neuter this poof installation by deleting its configuration and executables.
 """
     _neuter(conf.confDir)
 
@@ -384,7 +383,7 @@ Neuter this poof installation by deleting its configuration.
 @globalConf
 def upload(conf):
     """
-Upload all the files to the cloud drive and delete the local paths.
+Upload to remote and wipe out the local data.
 """
     click.echo(click.style('UPLOAD SYNC IN PROGRESS - PLEASE DO NOT INTERRUPT', fg='yellow'))
     outcome = _clone(True, confDir = conf.confDir, confFiles = conf.confFiles)
@@ -556,7 +555,7 @@ def _cryptoggle(poofConf, rcloneConf, confFiles = POOF_CONFIG_FILES):
 @globalConf
 def cryptoggle(conf):
     """
-    Toggle remote target encryption ON/OFF
+    Toggle remote target encryption ON/OFF.
     """
     poofConf = _config(confFiles = conf.confFiles, showConfig = False)
     cloneConf = _cconfig(confFiles = conf.confFiles, showConfig = False)
