@@ -1,13 +1,13 @@
-% POOF(1) Version 1.2.4 | Secure cloud storage backup documentation
+% poof(1) Version 1.2.4 | Secure cloud storage backup documentation
 
 
-NAME
+Name
 ====
 
 **poof** - 2-way secure data sync/backup/restore against cloud storage.
 
 
-SYNOPSIS
+Synopsis
 ========
 
 | **poof** _command_
@@ -17,18 +17,18 @@ SYNOPSIS
 | **poof** \[**--help**]
 
 
-DESCRIPTION
+Description
 ===========
 
 Backup of local file system directories to cloud storage or other storage, in a
 secure manner, and preserving the original files' attributes for later recovery.
-The poof! tool offers additional security options:
+The poof\! tool offers additional security options:
 
 - Secure delete the local file system files upon successful process completion
 - Encrypt the remote copies
 - Eliminates all traces of itself in the local file system
 
-poof! leverages tried-and-true tools to perform its tasks:
+poof\! leverages tried-and-true tools to perform its tasks:
 
 - [`rclone`](https://rclone.org/) - A command line program for managing files in
   cloud storage.
@@ -58,8 +58,64 @@ Options
 
 Canonical file name merges _confdir_/_poofconf_ or _confdir_/_rcloneconf_.
 
+Options are never used in production mode.  They were defined for initial
+rollout, testing, etc. but the correct way of running poof! is by letting it
+determine the optimal config file system locations on its own.
 
-FILES
+
+Commands
+--------
+
+**backup**
+
+: Backup to remote without wiping out the local data.
+
+**cconfig**
+
+: Ensure that the rclone-poof.conf file exists; creates it if not present.
+
+**config**
+
+: Ensure that the poof.conf file exists; creates it if not present.
+
+**cryptoggle**
+
+: Toggle remote target encryption ON/OFF.
+
+**download**
+
+: Download the files from the cloud storage into their corresponding
+  directories.
+
+**econfig**
+
+: Generate the encrypted rclone configuration scaffold.
+
+**neuter**
+
+: Neuter this poof installation by deleting its configuration and executables.
+
+**paths**
+
+: Output the platform-specific paths to the poof configuration files.
+
+**upload**
+
+: Upload to remote and wipe out the local data.
+
+**verify**
+
+: Verify the poof and rclone tool configurations.
+
+**version**
+
+: Print the software version and quit.
+
+The **config** and **cconfig** commands also output their associated
+configuration file to the console, and make a copy to the clipboard.
+
+
+Files
 =====
 
 *poof.conf*
@@ -79,7 +135,7 @@ On macOS:  $HOME/Library/Application Support/poof
 On Linux:  $HOME/.config/poof
 
 
-ONE-TIME SETUP
+One-time setup
 ==============
 
 Use `pip` or `pip3` to install in the current Python scope (system or virtual
@@ -224,7 +280,7 @@ source file system to the targets.  Backups are never incremental -- they are
 always **_snapshots_**.
 
 
-REGULAR BACKUPS
+Regular backups
 ===============
 
 `poof` validates its own configuration before backing up/uploading or restoring
@@ -236,14 +292,14 @@ the `poof` configuration to the cloud storage.  It may automated via `cron` or
 `launchd`.
 
 
-UPLOAD
+Upload
 ======
 
 Run `poof upload` when there is need to sync the local file system directories,
 then removes all the local files and directories (local directories wipe).
 
 
-RESTORE
+Restore
 =======
 
 To restore a backup from the cloud to the local file system:
@@ -256,7 +312,7 @@ hours, depending on the number of files involved, the lengt of the files, and
 the connection speed.
 
 
-ENCRYPTED BACKUPS/UPLOADS
+Encrypted backups/uploads
 =========================
 
 `poof` leverages `rclone` encrypted remotes, if they are defined and available,
@@ -380,16 +436,16 @@ obfuscated in the remote as described at the beginning of this section.
 **https://raw.githubusercontent.com/poof-backup/poof/master/assets/sample-S3-dir-list.png**
 
 
-OPERATIONAL SECURITY
+Operational security
 ====================
 
-poof! operates within a privacy continuum that ranges from simple data backup
+poof\! operates within a privacy continuum that ranges from simple data backup
 and restore for safekeeping, to full target encryption and self-destruction in
 case of risk of local system compromise.
 
 <img src='https://raw.githubusercontent.com/poof-backup/poof/master/assets/backup-continuum.png'>
 
-The poof! model covers 4 data security threat levels:  **https://raw.githubusercontent.com/poof-backup/poof/master/assets/backup-continuum.png**
+The poof\! model covers 4 data security threat levels:  **https://raw.githubusercontent.com/poof-backup/poof/master/assets/backup-continuum.png**
 
 
 Level 1:  backup and restore
@@ -419,7 +475,7 @@ Configuration info for threat levels 1 and 2
 --------------------------------------------
 
 The `poof.conf` and `rclone-poof.conf` configuration files are uploaded to the
-cloud if the poof! configuration file is included as part of the configuration.
+cloud if the poof\! configuration file is included as part of the configuration.
 These files are stored in cleartext in the cloud storage, and can be viewed or
 downloaded by anyone with access permissions.
 
@@ -441,7 +497,7 @@ As a user, I need to make a backup of my local directories but need to wipe them
 out upon completion.  I do not trust the cloud storage provider.
 
 - Personal or business sensitive data is stored in one or more directories
-  managed by poof!
+  managed by poof\!
 - Bought a new computer and must move the data directories from the old to the
   new system
 - The current system must be surrendered to a distrusted third-party like a
@@ -453,7 +509,7 @@ out upon completion.  I do not trust the cloud storage provider.
 Configuration info for threat levels 3 and 4
 --------------------------------------------
 
-The poof! configuration files are stored in cleartext in the local file system,
+The poof\! configuration files are stored in cleartext in the local file system,
 but are encrypted in the cloud storage if they are present in the `poof.conf`
 configuration file.
 
@@ -463,7 +519,7 @@ system.  `rclone` is left alone because there may be other legitimate uses for
 it other than `poof` integration.
 
 
-Preserving the poof! configuration for threat levels 3 and 4
+Preserving the poof\! configuration for threat levels 3 and 4
 ------------------------------------------------------------
 
 The `config` and `cconfig` commands display the current configuration and copy
@@ -504,19 +560,19 @@ storage holding your backups or the system that you backed up, and use them to
 restore your data to a secure, safe system, when the threat level drops.
 
 
-BUGS
+Bugs
 ====
 
 See GitHub issues:  https://github.com/poof-backup/poof/issues
 
 
-AUTHOR
+Author
 ======
 
-Eugene Ciurana and the poof! Development team <poof.project AT cime.net>
+Eugene "pr3d4t0r" Ciurana and the poof backup contributors <poof.project AT cime.net>
 
 
-SEE ALSO
+See also
 ========
 
 **rclone(1)**

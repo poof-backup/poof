@@ -56,6 +56,7 @@ local:
 
 
 manpage:
+	t=$$(mktemp) && awk -v "v=$(VERSION)" '/^%/ { $$4 = v; print; next; } { print; }' README.md > "$$t" && cat "$$t" > README.md && rm -f "$$t"
 	pandoc --standalone --to man README.md -o $(DIST)/poof.1
 
 
