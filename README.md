@@ -371,10 +371,14 @@ prevent their data from being mined or otherwise accessed without authorization.
 As a user, I need to make a backup of my local directories but need to wipe them
 out upon completion.  I do not trust the cloud storage provider.
 
+- Personal or business sensitive data is stored in one or more directories
+  managed by poof!
 - Bought a new computer and must move the data directories from the old to the
   new system
 - The current system must be surrendered to a distrusted third-party like a
   repair shop
+- The cloud storage provider is known or suspected to inspect or mine storage 
+  contents or to grant access to third-parties to do so
 
 
 ### Configuration info for threat levels 3 and 4

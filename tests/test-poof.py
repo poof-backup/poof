@@ -14,6 +14,7 @@ from poof import _CRYPT_BOGUS_SECRETS
 from poof import _S3_BOGUS_SECRETS
 from poof import _cconfig
 from poof import _config
+from poof import _cryptoggle
 from poof import _econfig
 from poof import _encryptionIsEnabled
 from poof import _getNukeDirectoryArgsLinux
@@ -244,5 +245,13 @@ def test__encryptionIsEnabled():
     assert _encryptionIsEnabled(poofConf, cloneConf)
 
 
-test__cconfig()
+def test__cryptoggle():
+    poofConf = _config(TEST_POOF_CONF_FILES, TEST_POOF_CONF_DIR)
+    cloneConf = _cconfig(TEST_POOF_CONF_FILES, TEST_POOF_CONF_DIR)
+
+    assert _cryptoggle(poofConf, cloneConf, confFiles = TEST_POOF_CONF_FILES) == PoofStatus.ENCRYPTION_DISABLED
+
+    cloneConf['poof-crypt'] = { 'type': 'crypt', 'remote': 'poof-backup', }
+    assert _cryptoggle(poofConf, cloneConf, confFiles = TEST_POOF_CONF_FILES) == PoofStatus.ENCRYPTION_ENABLED
+    assert _cryptoggle(poofConf, cloneConf, confFiles = TEST_POOF_CONF_FILES) == PoofStatus.ENCRYPTION_DISABLED
 
