@@ -24,7 +24,7 @@ import pyperclip
 
 # *** constants ***
 
-__VERSION__ = "1.2.2"
+__VERSION__ = "1.2.4"
 
 RCLONE_PROG      = 'rclone'
 RCLONE_PROG_TEST = 'ls' # a program we know MUST exist to the which command
