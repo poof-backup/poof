@@ -19,6 +19,7 @@ VERSION=$(shell echo "from poof import __VERSION__; print(__VERSION__)" | python
 all: ALWAYS
 	make test
 	make package
+	make manpage
 
 
 # TODO: Use rm -Rfv $$(find $(PACKAGE) | awk '/__pycache__$$/') after the poof
@@ -52,6 +53,10 @@ libupdate:
 
 local:
 	pip install -e .
+
+
+manpage:
+	pandoc --standalone --to man README.md -o $(DIST)/poof.1
 
 
 # This target will be removed in a future Makefile release.  The correct semantics are to use the package target.
