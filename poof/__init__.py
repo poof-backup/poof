@@ -516,12 +516,49 @@ def version(_):
     click.echo('poof version %s' % (__VERSION__))
 
 
+def _cryptoggle(poofConf, rcloneConf, confFiles = POOF_CONFIG_FILES):
+    cryptRemote = None
+    plainRemote = None
+    status = PoofStatus.ENCRYPTION_DISABLED
+    poofRemoteOrg = poofConf['remote']
+
+    for section in rcloneConf.sections():
+        # poof version < 2.0 assumes only two sections:  remote and crypt remote.
+        # The order in which these sections appear in the rclone config file is
+        # irrelevant.
+        if 'crypt' == rcloneConf[section]['type']:
+            cryptRemote = section
+        else:
+            plainRemote = section
+
+    if poofConf['remote'] == plainRemote and cryptRemote:
+        poofConf['remote'] = cryptRemote
+        status = PoofStatus.ENCRYPTION_ENABLED
+        foreground = 'bright_green'
+    elif poofConf['remote'] == cryptRemote and plainRemote:
+        poofConf['remote'] = plainRemote
+        status = PoofStatus.ENCRYPTION_DISABLED
+        foreground = 'bright_yellow'
+    elif poofRemoteOrg == poofConf['remote']:
+        foreground =  'bright_red'
+        click.secho('No encrypted remote is available!', fg = foreground)
+
+    if poofRemoteOrg != poofConf['remote']:
+        with open(confFiles['poof.conf'], 'w') as outputFile:
+            json.dump(poofConf, outputFile, sort_keys = True, indent = 2,)
+
+    click.secho('Toggle target from %s to %s - %s' % (poofRemoteOrg, poofConf['remote'], status), fg = foreground)
+
+    return status
+
+
 @main.command()
 @globalConf
-def cryptoggle(_):
+def cryptoggle(conf):
     """
     Toggle remote target encryption ON/OFF
     """
-    click.secho('cryptoggle is not implemented', fg = 'bright_red')
-    sys.exit(99)
+    poofConf = _config(confFiles = conf.confFiles, showConfig = False)
+    cloneConf = _cconfig(confFiles = conf.confFiles, showConfig = False)
+    _cryptoggle(poofConf, cloneConf, conf.confFiles)
 
