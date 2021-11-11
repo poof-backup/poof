@@ -24,7 +24,7 @@ import pyperclip
 
 # *** constants ***
 
-__VERSION__ = "1.2.4"
+__VERSION__ = "1.2.5"
 
 RCLONE_PROG      = 'rclone'
 RCLONE_PROG_TEST = 'ls' # a program we know MUST exist to the which command
@@ -154,7 +154,7 @@ def _initializeCloningConfigIn(confFile, confDir):
 
 
 def die(message, exitCode = 0):
-    click.echo(click.style(message, fg='red'))
+    click.secho(message, fg = 'bright_yellow', bg = 'red')
     if exitCode:
         sys.exit(exitCode)
 
@@ -211,7 +211,10 @@ def _config(confFiles = POOF_CONFIG_FILES, confDir = POOF_CONFIG_DIR, showConfig
     _initializeConfigIn(confFile, confDir)
 
     configStr = open(confFile, 'r').read()
-    actualConfiguration = json.loads(configStr)
+    try:
+        actualConfiguration = json.loads(configStr)
+    except:
+        die('invalid JSON? Failed to load %s' % confFile, 5)
 
     if showConfig:
         click.secho(configStr)
@@ -282,12 +285,17 @@ def _clone(toCloud, confDir = POOF_CONFIG_DIR, confFiles = POOF_CONFIG_FILES, nu
             processingItem = cloudPath
 
         click.secho('\nprocessing: %s' % processingItem)
+
+        if not os.path.exists(processingItem):
+            click.secho('%s not found or not mounted; skipped'% processingItem, fg = 'red', bg = 'bright_yellow')
+            continue
         result = subprocess.run(args)
 
         try:
             result.check_returncode()
         except:
-            die('%s failed = %d - see output for details' % (RCLONE_PROG, result.returncode), 3)
+            click.secho('%s failed = %d - see output for details' % (RCLONE_PROG, result.returncode), fg = 'bright_red')
+            continue
 
         if toCloud and 'poof' not in localDir and nukeLocal:
             status, error = _nukeDirectory(localDir)
