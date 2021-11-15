@@ -1,7 +1,7 @@
-# Use cases
+# Operational considerations
 
-These use cases expand the details described in README.md regarding the backups
-workflow and threat model.
+These operational considerations expand the details described in README.md
+regarding the backups workflow and threat model.
 
 
 ## Background
@@ -34,9 +34,40 @@ of fuss.  Backups can be automated or user-initiated, and the user has peace of
 mind knowing that the process is reliable, that data at rest in the cloud
 storage is secure and remains private, and that their local systems can be
 protected by wiping out the local data repositories and poof program + 
-configuration.  Hardening against forensic analysis is one of the main poof!
+configuration.  Resilience against forensic analysis is one of the main poof!
 backup design goals.
 
+
+## Operational model
+
+poof! backup treats data as existing only forward in time.  Backups are
+implemented through synchronization of the source and cloud storage paths.  No
+incremental backup capabilities are available.  This is by design.  Think of
+these backups as **data store snapshots**.
+
+Users can run `poof backup` as often as they want.  Manual or timer operation
+(via `cron` or `launchd`) are supported.
+
+Users may run `poof upload` if they need to ensure that a backup exists and must
+delete the data and the `poof` tool and configuration, in response of a threat
+or in the course of normal system maintenance when the machine must be
+surrendered to an untrusted third-party.
+
+Backups are destructive at the target.  A file that was deleted in the source
+storage will be deleted in the target.  This holds true whether the user backs
+up or restores the data.  A new file object present in the local system will
+be deleted if it doesn't exist in the remote system/cloud storage and the user
+runs `poof download` to get the original data.
+
+
+### Backups:  source, target
+
+<img src='https://raw.githubusercontent.com/poof-backup/poof/master/assets/uc-bk-src-targt.png'>
+
+
+### Downloads:  source, target
+
+<img src='https://raw.githubusercontent.com/poof-backup/poof/master/assets/uc-dn-src-targt.png'>
 
 
 ---
