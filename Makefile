@@ -96,6 +96,11 @@ resetpy: ALWAYS
 	rm -Rfv ./.Python ./bin ./build ./dist ./include ./lib
 
 
+targets:
+	@printf "Makefile targets:\n\n"
+	@cat Makefile| awk '/:/ && !/^#/ && !/targets/ && !/Makefile/ { gsub("ALWAYS", ""); gsub(":", ""); print; } /^ALWAYS/ { next; }'
+
+
 # TODO: Use rm -Rfv $$(find $(PACKAGE) | awk '/__pycache__$$/') after the poof
 #       package is claimed to this project by PyPI.
 test: ALWAYS

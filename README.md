@@ -1,4 +1,4 @@
-% poof(1) Version 1.2.5 | Secure cloud storage backup documentation
+% poof(1) Version 1.2.6 | Secure cloud storage backup documentation
 
 
 Name
@@ -113,6 +113,18 @@ Commands
 
 The **config** and **cconfig** commands also output their associated
 configuration file to the console, and make a copy to the clipboard.
+
+
+Supported Storage
+-----------------
+
+**S3**
+
+: AWS Simple Storage Service
+
+
+The development team is evaluating other storage systems and plan to extend 
+support in poof! backup 2.0, expected to be released in mid 2022.Q1.
 
 
 Files

@@ -24,7 +24,7 @@ import pyperclip
 
 # *** constants ***
 
-__VERSION__ = "1.2.5"
+__VERSION__ = "1.2.6"
 
 RCLONE_PROG      = 'rclone'
 RCLONE_PROG_TEST = 'ls' # a program we know MUST exist to the which command
@@ -284,7 +284,7 @@ def _clone(toCloud, confDir = POOF_CONFIG_DIR, confFiles = POOF_CONFIG_FILES, nu
                   )
             processingItem = cloudPath
 
-        click.secho('\nprocessing: %s' % processingItem)
+        click.secho('\nprocessing: %s' % processingItem, fg = 'green')
 
         if not os.path.exists(processingItem):
             click.secho('%s not found or not mounted; skipped'% processingItem, fg = 'red', bg = 'bright_yellow')
