@@ -1,4 +1,4 @@
-% poof(1) Version 1.2.6 | Secure cloud storage backup documentation
+% poof(1) Version 1.2.7 | Secure cloud storage backup documentation
 
 
 Name
