@@ -455,6 +455,9 @@ poof\! operates within a privacy continuum that ranges from simple data backup
 and restore for safekeeping, to full target encryption and self-destruction in
 case of risk of local system compromise.
 
+An expanded description of the operational considerations and workflows is
+available via **https://github.com/poof-backup/poof/blob/master/ops-docs/index.md**
+
 <img src='https://raw.githubusercontent.com/poof-backup/poof/master/assets/backup-continuum.png'>
 
 The poof\! model covers 4 data security threat levels:  **https://raw.githubusercontent.com/poof-backup/poof/master/assets/backup-continuum.png**

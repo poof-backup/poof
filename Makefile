@@ -9,7 +9,7 @@ DEVPI_HOST=$(shell cat devpi-hostname.txt)
 DEVPI_PASSWORD=$(shell cat ./devpi-password.txt)
 DEVPI_USER=$(shell cat ./devpi-user.txt)
 DIST=./dist
-DOCS=./docs
+MANPAGES=./manpages
 PACKAGE=$(shell cat package.txt)
 REQUIREMENTS=requirements.txt
 VERSION=$(shell echo "from poof import __VERSION__; print(__VERSION__)" | python)
@@ -28,7 +28,7 @@ all: ALWAYS
 clean:
 	rm -Rf $(BUILD)/*
 	rm -Rf $(DIST)/*
-	rm -Rf $(DOCS)/*
+	rm -Rf $(MANPAGES)/*
 	rm -Rfv $$(find poof/ | awk '/__pycache__$$/')
 	rm -Rfv $$(find tests | awk '/__pycache__$$/')
 	rm -Rfv $$(find . | awk '/.ipynb_checkpoints/')
@@ -58,9 +58,9 @@ local:
 
 
 manpage:
-	mkdir -p $(DOCS)
+	mkdir -p $(MANPAGES)
 	t=$$(mktemp) && awk -v "v=$(VERSION)" '/^%/ { $$4 = v; print; next; } { print; }' README.md > "$$t" && cat "$$t" > README.md && rm -f "$$t"
-	pandoc --standalone --to man README.md -o $(DOCS)/poof.1
+	pandoc --standalone --to man README.md -o $(MANPAGES)/poof.1
 
 
 # This target will be removed in a future Makefile release.  The correct semantics are to use the package target.

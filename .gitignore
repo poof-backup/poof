@@ -149,6 +149,7 @@ dmypy.json
 **dummy.py
 **dummy.txt
 **pip.conf
+**poof.1
 **rclone-crypt*
 **rclone.conf
 **test.py
