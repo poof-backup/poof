@@ -69,5 +69,5 @@ https://pypi.cime.dev/ciurana/dev
 
 
 ---
-&#169; the poof-backup contributors
+&#169; the poof backup contributors
 
