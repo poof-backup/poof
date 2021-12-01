@@ -63,11 +63,6 @@ manpage:
 	pandoc --standalone --to man README.md -o $(MANPAGES)/poof.1
 
 
-# This target will be removed in a future Makefile release.  The correct semantics are to use the package target.
-module:
-	make package
-
-
 nuke: ALWAYS
 	make clean
 

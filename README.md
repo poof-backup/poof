@@ -1,4 +1,4 @@
-% poof(1) Version 1.2.7 | Secure cloud storage backup documentation
+% poof(1) Version 1.2.8 | Secure cloud storage backup documentation
 
 
 Name
@@ -152,6 +152,10 @@ One-time setup
 
 Use `pip` or `pip3` to install in the current Python scope (system or virtual
 environment):
+
+**IMPORTANT** - the package name was `poof-backup` until 01.Dec.2021.  Remove
+that package and replace with `poof` by itself.  Check if this is the case by
+running `poof version` - 1.2.7 was the last one published under the old name.
 
 ```zsh
 pip3 install poof
