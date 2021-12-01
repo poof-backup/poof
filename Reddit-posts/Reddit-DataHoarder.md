@@ -5,6 +5,7 @@ Hi!
 poof! Backup is a tool for backing up local file system directories to cloud 
 storage, in a secure manner, with forensics-resistant features:
 
+- High data volume, high speed data sync to/from cloud storage
 - Secure delete the local file system files upon successful process completion
 - Encrypt the remote copies
 - Eliminates all traces of itself in the local file system
@@ -16,9 +17,10 @@ storage, in a secure manner, with forensics-resistant features:
 
 We are reaching out to the r/DataHoarder community with this Request For
 Comments as we make the project public, because you are a well-informed and
-knowledgeable group.  Moving and syncing large amounts of data with ease is one
-of this community's goals, and we feel confident `poof` can help with that.  We
-also hope to gain insights from you, and your feedback will be invaluable for
+knowledgeable group.  Thanks to **u/Gumagugu** for reviewing this before we
+posted. Moving and syncing large amounts of data with ease and peace of mind is
+one of this community's goals, and we feel confident `poof` can help with that.
+We also hope to gain insights from you, and your feedback will be invaluable for
 shaping future releases.
 
 poof! is a purpose-specific wrapper around the robust [Rclone](https://rclone.org)
@@ -31,8 +33,9 @@ efficient as possible.
 
 The project was in development and continuous production use for 16 months
 before this public release.  The brief user manual, threat model, and general
-instalation guide is avaliable in the project [README](https://github.com/poof-backup/poof/blob/master/README.md)
-on GitHub.
+instalation guide are avaliable in the project [README](https://github.com/poof-backup/poof/blob/master/README.md)
+on GitHub.  More detailed [operational considerations](https://github.com/poof-backup/poof/blob/master/ops-docs/index.md)
+are also available in the same repository.
 
 This first public release works on macOS and Linux, probably on any UNIX-like 
 operating and file system where Python 3 and `rclone` are available.
@@ -41,6 +44,10 @@ BSD-3 license.
 
 [poof! can be installed from the Python Package Index](https://pypi.org/project/poof-backup/)
 via `pip`.  Future releases will also be available for Homebrew, Ubuntu/Debian,
-and other package managers.  We hope that version 2.0 will also include Windows.
+and other package managers.  We hope that version 2.0 will also support Windows
+file systems.
 
 Thanks, and we look forward to your comments!
+
+POSTED:  https://www.reddit.com/r/DataHoarder/comments/r4xxt5/poof_safe_secure_and_forensicsresistant_backup/
+
