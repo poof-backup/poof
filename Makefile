@@ -108,6 +108,10 @@ test: ALWAYS
 	rm -Rfv $$(find tests | awk '/__pycache__$$/')
 
 
+tools:
+	pip install -U devpi-client pip ptpython pudb pytest
+
+
 upload:
 	devpi upload dist/*whl
 
