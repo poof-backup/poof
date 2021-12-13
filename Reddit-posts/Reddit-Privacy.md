@@ -59,7 +59,7 @@ operating and file system where Python 3 and `rclone` are available.
 [The code is available on GitHub](https://github.com/poof-backup/poof) under the
 BSD-3 license.
 
-[poof! can be installed from the Python Package Index](https://pypi.org/project/poof-backup/)
+[poof! can be installed from the Python Package Index](https://pypi.org/project/poof/)
 via `pip`.  Future releases will also be available for Homebrew, Ubuntu/Debian,
 and other package managers.  We hope that version 2.0 will also support Windows
 file systems.

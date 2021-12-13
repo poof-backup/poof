@@ -24,7 +24,7 @@ import pyperclip
 
 # *** constants ***
 
-__VERSION__ = "1.2.8"
+__VERSION__ = "1.2.9"
 
 RCLONE_PROG      = 'rclone'
 RCLONE_PROG_TEST = 'ls' # a program we know MUST exist to the which command
@@ -79,6 +79,7 @@ class Configuration(object):
     def __init__(self):
         self.confDir = POOF_CONFIG_DIR
         self.confFiles = POOF_CONFIG_FILES
+        self.verbose = False
 
 
 globalConf = click.make_pass_decorator(Configuration, ensure = True)
@@ -91,12 +92,14 @@ _startPoof = datetime.now()
 @click.option('--confdir', default = POOF_CONFIG_DIR, help = 'poof configuration directory', show_default = True)
 @click.option('--poofconf', default = POOF_CONFIG_FILES['poof.conf'], help = 'poof configuration file', show_default = True)
 @click.option('--rcloneconf', default = POOF_CONFIG_FILES['rclone-poof.conf'], help = 'rclone configuration file', show_default = True)
+@click.option('--verbose/--no-verbose', default = False, help = 'verbose output', show_default = True)
 @globalConf
-def main(conf, confdir, poofconf, rcloneconf):
+def main(conf, confdir, poofconf, rcloneconf, verbose):
     # IMPORTANT - it must exist before declaring the functions, top-down,
     # because of the decorator.
     conf.confDir   = confdir
     conf.confFiles = { 'poof.conf': poofconf, 'rclone-poof.conf': rcloneconf, }
+    conf.verbose   = verbose
 
 
 def _initializeConfigIn(confFile, confDir):
@@ -247,7 +250,7 @@ def _encryptionIsEnabled(poofConf, cloneConf):
     return enabled
 
 
-def _clone(toCloud, confDir = POOF_CONFIG_DIR, confFiles = POOF_CONFIG_FILES, nukeLocal = True):
+def _clone(toCloud, confDir = POOF_CONFIG_DIR, confFiles = POOF_CONFIG_FILES, nukeLocal = True, verbose = False):
     _, status = _verify(confFiles = confFiles)
 
     if status != PoofStatus.OK:
@@ -263,25 +266,25 @@ def _clone(toCloud, confDir = POOF_CONFIG_DIR, confFiles = POOF_CONFIG_FILES, nu
 
         cloudPath = '%s:%s' % (conf['remote'], cloudDir) if _encryptionIsEnabled(conf, cloneConf) else '%s:%s/%s' % (conf['remote'], conf['bucket'], cloudDir)
         if toCloud:
-            args = ( RCLONE_PROG,
+            args = (arg for arg in ( RCLONE_PROG,
                     '--config',
                     confFiles['rclone-poof.conf'],
-                    '-P',
+                    '-P' if verbose else '',
                     '-L',
                     'sync',
                     localDir,
                     cloudPath,
-                  )
+                  ) if arg)
             processingItem = localDir
         else:
-            args = ( RCLONE_PROG,
+            args = (arg for arg in ( RCLONE_PROG,
                     '--config',
                     confFiles['rclone-poof.conf'],
-                    '-P',
+                    '-P' if verbose else '',
                     'sync',
                     cloudPath,
                     localDir,
-                  )
+                  ) if arg)
             processingItem = cloudPath
 
         click.secho('\nprocessing: %s' % processingItem, fg = 'green')
@@ -327,7 +330,8 @@ def backup(conf):
 Backup to remote without wiping out the local data.
 """
     click.echo(click.style('BACKUP IN PROGRESS - PLEASE DO NOT INTERRUPT', fg='yellow'))
-    outcome = _clone(True, confDir = conf.confDir, confFiles = conf.confFiles, nukeLocal = False)
+    click.echo(click.style('v = %s' % conf.verbose, fg='yellow'))
+    outcome = _clone(True, confDir = conf.confDir, confFiles = conf.confFiles, nukeLocal = False, verbose = conf.verbose)
     h, m, s = _timeLapsed()
     click.echo(click.style(('BACKUP COMPLETED in %d:%02d:%02d' % (h, m, s)), fg='green'))
 
@@ -341,7 +345,7 @@ def download(conf):
 Download the files from the cloud storage into their corresponding directories.
 """
     click.echo(click.style('DOWNLOAD SYNC IN PROGRESS - PLEASE DO NOT INTERRUPT', fg='yellow'))
-    outcome = _clone(False, confDir = conf.confDir, confFiles = conf.confFiles)
+    outcome = _clone(False, confDir = conf.confDir, confFiles = conf.confFiles, verbose = conf.verbose)
     h, m, s = _timeLapsed()
     click.echo(click.style(('DOWNLOAD COMPLETED in %d:%02d:%02d' % (h, m, s)), fg='green'))
 
@@ -394,7 +398,7 @@ def upload(conf):
 Upload to remote and wipe out the local data.
 """
     click.echo(click.style('UPLOAD SYNC IN PROGRESS - PLEASE DO NOT INTERRUPT', fg='yellow'))
-    outcome = _clone(True, confDir = conf.confDir, confFiles = conf.confFiles)
+    outcome = _clone(True, confDir = conf.confDir, confFiles = conf.confFiles, verbose = conf.verbose)
     h, m, s = _timeLapsed()
     click.echo(click.style(('UPLOAD COMPLETED in %d:%02d:%02d' % (h, m, s)), fg='green'))
 
