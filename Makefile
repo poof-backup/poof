@@ -37,7 +37,7 @@ clean:
 
 devpi:
 	devpi use $(DEVPI_HOST)
-	devpi login $(DEVPI_USER) --password="$(DEVPI_PASSWORD)"
+	@devpi login $(DEVPI_USER) --password="$(DEVPI_PASSWORD)"
 	devpi use $(DEVPI_USER)/dev
 	devpi -v use --set-cfg $(DEVPI_USER)/dev
 	@[[ -e "pip.conf-bak" ]] && rm -f "pip.conf-bak"
