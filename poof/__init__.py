@@ -24,7 +24,7 @@ import pyperclip
 
 # *** constants ***
 
-__VERSION__ = "1.2.9"
+__VERSION__ = "1.2.10"
 
 RCLONE_PROG      = 'rclone'
 RCLONE_PROG_TEST = 'ls' # a program we know MUST exist to the which command
@@ -330,7 +330,6 @@ def backup(conf):
 Backup to remote without wiping out the local data.
 """
     click.echo(click.style('BACKUP IN PROGRESS - PLEASE DO NOT INTERRUPT', fg='yellow'))
-    click.echo(click.style('v = %s' % conf.verbose, fg='yellow'))
     outcome = _clone(True, confDir = conf.confDir, confFiles = conf.confFiles, nukeLocal = False, verbose = conf.verbose)
     h, m, s = _timeLapsed()
     click.echo(click.style(('BACKUP COMPLETED in %d:%02d:%02d' % (h, m, s)), fg='green'))
