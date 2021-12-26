@@ -103,6 +103,7 @@ test: ALWAYS
 	pip install -r requirements.txt
 	pip install -e .
 	pytest -v ./tests/test-poof.py
+	pytest -v ./tests/test-launchd.py
 	pip uninstall -y $(PACKAGE)==$(VERSION) || true
 	rm -Rfv $$(find poof/ | awk '/__pycache__$$/')
 	rm -Rfv $$(find tests | awk '/__pycache__$$/')
