@@ -44,9 +44,9 @@ LAUNCH_AGENT_PLIST_TEMPLATE = """<?xml version="1.0" encoding="UTF-8"?>
 	<key>RootDirectory</key>
 	<string>%%HOME%%</string>
 	<key>StandardErrorPath</key>
-	<string>/tmp/poof/poof-%%LAUNCH_AGENT_USER_NAME%%-err.dat</string>
+	<string>/tmp/poof/poof-launchd-%%LAUNCH_AGENT_USER_NAME%%-err.dat</string>
 	<key>StandardOutPath</key>
-	<string>/tmp/poof/poof-%%LAUNCH_AGENT_USER_NAME%%-out.dat</string>
+	<string>/tmp/poof/poof-launchd-%%LAUNCH_AGENT_USER_NAME%%-out.dat</string>
 	<key>StartCalendarInterval</key>
 	<array>
 		<dict>
