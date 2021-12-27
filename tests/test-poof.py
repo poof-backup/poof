@@ -15,6 +15,7 @@ from poof import _S3_BOGUS_SECRETS
 from poof import _cconfig
 from poof import _config
 from poof import _cryptoggle
+from poof import _display_launchdStatus
 from poof import _econfig
 from poof import _encryptionIsEnabled
 from poof import _getNukeDirectoryArgsLinux
@@ -31,6 +32,7 @@ from poof import paths
 import copy
 import json
 import os
+import platform
 import shutil
 import sys
 
@@ -254,4 +256,11 @@ def test__cryptoggle():
     cloneConf['poof-crypt'] = { 'type': 'crypt', 'remote': 'poof-backup', }
     assert _cryptoggle(poofConf, cloneConf, confFiles = TEST_POOF_CONF_FILES) == PoofStatus.ENCRYPTION_ENABLED
     assert _cryptoggle(poofConf, cloneConf, confFiles = TEST_POOF_CONF_FILES) == PoofStatus.ENCRYPTION_DISABLED
+
+
+def test__display_launchdStatus():
+    if platform.system() == 'Darwin':
+        assert _display_launchdStatus()
+    else:
+        assert not _display_launchdStatus()
 
