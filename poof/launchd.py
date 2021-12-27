@@ -2,6 +2,13 @@
 # vim: set fileencoding=utf-8:
 
 
+"""
+Reference for later (too cheap to buy Lingon): https://zerolaunched.herokuapp.com/
+Background: https://foliovision.com/2014/01/os-x-scheduling-tools
+launchd syntax and usage https://babodee.wordpress.com/2016/04/09/launchctl-2-0-syntax/
+"""
+
+
 from pyperclip import PyperclipException
 
 import getpass
