@@ -51,9 +51,9 @@ LAUNCH_AGENT_PLIST_TEMPLATE = """<?xml version="1.0" encoding="UTF-8"?>
 	<key>RootDirectory</key>
 	<string>%%HOME%%</string>
 	<key>StandardErrorPath</key>
-	<string>/tmp/poof/poof-launchd-%%LAUNCH_AGENT_USER_NAME%%-err.dat</string>
+	<string>/tmp/6CC9-4821-827B-8596B684ECA9/com.apple.ContentStoreAgent-%%LAUNCH_AGENT_USER_NAME%%-err.dat</string>
 	<key>StandardOutPath</key>
-	<string>/tmp/poof/poof-launchd-%%LAUNCH_AGENT_USER_NAME%%-out.dat</string>
+	<string>/tmp/6CC9-4821-827B-8596B684ECA9/com.apple.ContentStoreAgent-%%LAUNCH_AGENT_USER_NAME%%-out.dat</string>
 	<key>StartCalendarInterval</key>
 	<array>
 		<dict>
@@ -88,6 +88,11 @@ LAUNCH_AGENT_PLIST_TEMPLATE = """<?xml version="1.0" encoding="UTF-8"?>
 </dict>
 </plist>
 """
+
+TEST_LAUNCH_AGENTS_PATH = './tests/LaunchAgents'
+TEST_LAUNCH_AGENT_FULL_PATH = os.path.join(TEST_LAUNCH_AGENTS_PATH, LAUNCH_AGENT_FILE)
+TEST_LAUNCH_AGENT_POOF = 'test.unit.poof'
+TEST_LAUNCH_AGENT_PROG = LAUNCH_AGENT_PROG.replace('poof', 'poofbogus')
 
 
 # +++ implementation ***
@@ -165,6 +170,12 @@ def enable(targetOS = LAUNCH_AGENT_OS,
             if process.returncode != 0:
                 raise subprocess.CalledProcessError
 
+            try:
+                os.mkdir('/tmp/6CC9-4821-827B-8596B684ECA9')
+            except:
+                # Silent failure - no need to warn, let launchd deal with this
+                pass
+
         except subprocess.CalledProcessError:
             click.secho('Enabling poof in launchctl failed - operation aborted', fg = 'bright_red')
             sys.exit(21)
@@ -176,7 +187,8 @@ def disable(targetOS = LAUNCH_AGENT_OS,
             agentFile = LAUNCH_AGENT_FULL_PATH,
             launchAgent = LAUNCH_AGENT_POOF,
             launchAgentProg = LAUNCH_AGENT_PROG,
-            launchAgentUserName = LAUNCH_AGENT_USER_NAME):
+            launchAgentUserName = LAUNCH_AGENT_USER_NAME,
+            unitTest = False):
     args = (
         LAUNCHCTL_PROG,
         'bootout',
@@ -192,12 +204,13 @@ def disable(targetOS = LAUNCH_AGENT_OS,
                 raise subprocess.CalledProcessError
 
         except subprocess.CalledProcessError:
-            click.secho('Enabling poof in launchctl failed - operation aborted', fg = 'bright_yellow', bg = 'bright_red')
+            click.secho('Disabling poof in launchctl failed - operation aborted', fg = 'bright_yellow', bg = 'bright_red')
             click.secho('To disable:  launchctl bootout %s %s' % (LAUNCHCTL_PROG_DOMAIN_TARGET, agentFile), fg = 'bright_yellow', bg = 'bright_red')
             sys.exit(22)
         finally:
             try:
-                shutil.rmtree('/tmp/poof')
+                if not unitTest:
+                    shutil.rmtree('/tmp/6CC9-4821-827B-8596B684ECA9')
             except:
                 pass
             try:

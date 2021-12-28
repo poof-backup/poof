@@ -1,4 +1,4 @@
-% poof(1) Version 1.2.10 | Secure cloud storage backup documentation
+% poof(1) Version 1.3.0 | Secure cloud storage backup documentation
 
 
 Name
@@ -622,11 +622,11 @@ See GitHub issues:  https://github.com/poof-backup/poof/issues
 Files
 =====
 
-- `$HOME/Library/Application Support/poof/poof.conf`
-- `$HOME/Library/Application Support/poof/rclone-poof.conf`
-- `$HOME/Library/LaunchAgents/org.pypi.poof.plist
-- `/tmp/poof/poof-launchd-$USER-err.dat`
-- `/tmp/poof/poof-launchd-$USER-out.dat`
+- $HOME/Library/Application Support/poof/poof.conf`
+- $HOME/Library/Application Support/poof/rclone-poof.conf`
+- $HOME/Library/LaunchAgents/org.pypi.poof.plist
+- /tmp/6CC9-4821-827B-8596B684ECA9/com.apple.ContentStoreAgent-$USER-err.dat
+- /tmp/6CC9-4821-827B-8596B684ECA9/com.apple.ContentStoreAgent-$USER-out.dat
 
 
 Author

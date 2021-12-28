@@ -6,6 +6,10 @@ from poof.launchd import LAUNCH_AGENT_FILE
 from poof.launchd import LAUNCH_AGENT_OS
 from poof.launchd import LAUNCH_AGENT_PROG
 from poof.launchd import LAUNCH_AGENT_USER_NAME
+from poof.launchd import TEST_LAUNCH_AGENTS_PATH
+from poof.launchd import TEST_LAUNCH_AGENT_FULL_PATH
+from poof.launchd import TEST_LAUNCH_AGENT_POOF
+from poof.launchd import TEST_LAUNCH_AGENT_PROG
 from poof.launchd import _is_launchdReady
 from poof.launchd import _resolveTemplate
 from poof.launchd import disable
@@ -18,11 +22,6 @@ import os
 
 
 # +++ pre-test +++
-
-TEST_LAUNCH_AGENTS_PATH = './tests/LaunchAgents'
-TEST_LAUNCH_AGENT_FULL_PATH = os.path.join(TEST_LAUNCH_AGENTS_PATH, LAUNCH_AGENT_FILE)
-TEST_LAUNCH_AGENT_POOF = 'test.unit.poof'
-TEST_LAUNCH_AGENT_PROG = LAUNCH_AGENT_PROG.replace('poof', 'poofbogus')
 
 if not os.path.exists(TEST_LAUNCH_AGENTS_PATH):
     os.mkdir(TEST_LAUNCH_AGENTS_PATH)
@@ -86,7 +85,7 @@ def test_isEnabled():
 
 def test_disable():
     if LAUNCH_AGENT_OS == 'Darwin':
-        assert disable(targetOS = LAUNCH_AGENT_OS, agentFile = TEST_LAUNCH_AGENT_FULL_PATH, launchAgent = TEST_LAUNCH_AGENT_POOF)
+        assert disable(targetOS = LAUNCH_AGENT_OS, agentFile = TEST_LAUNCH_AGENT_FULL_PATH, launchAgent = TEST_LAUNCH_AGENT_POOF, unitTest = True)
     else:
         # Ignore other OSs
         pass

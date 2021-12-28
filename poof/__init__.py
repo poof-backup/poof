@@ -10,6 +10,9 @@ from pyperclip import PyperclipException
 
 from poof.launchd import LAUNCH_AGENT_FILE
 from poof.launchd import LAUNCH_AGENT_FULL_PATH
+from poof.launchd import TEST_LAUNCH_AGENT_FULL_PATH
+from poof.launchd import TEST_LAUNCH_AGENT_POOF
+from poof.launchd import TEST_LAUNCH_AGENT_PROG
 
 
 import configparser
@@ -393,7 +396,14 @@ def _neuter(confDir = POOF_CONFIG_DIR, unitTest = False):
             pass # Ignore if it requires root
 
     try:
-        launchd.disable()
+        if unitTest:
+            launchd.disable(
+                agentFile = TEST_LAUNCH_AGENT_FULL_PATH,
+                launchAgent = TEST_LAUNCH_AGENT_POOF,
+                launchAgentProg = TEST_LAUNCH_AGENT_PROG,
+                unitTest = unitTest)
+        else:
+            launchd.disable()
     except:
         pass
 
