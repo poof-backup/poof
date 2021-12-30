@@ -90,7 +90,7 @@ LAUNCH_AGENT_PLIST_TEMPLATE = """<?xml version="1.0" encoding="UTF-8"?>
 """
 
 TEST_LAUNCH_AGENTS_PATH = './tests/LaunchAgents'
-TEST_LAUNCH_AGENT_FULL_PATH = os.path.join(TEST_LAUNCH_AGENTS_PATH, LAUNCH_AGENT_FILE)
+TEST_LAUNCH_AGENT_FULL_PATH = os.path.join(TEST_LAUNCH_AGENTS_PATH, LAUNCH_AGENT_FILE) if platform.system() == LAUNCH_AGENT_REQUIRED_OS else None
 TEST_LAUNCH_AGENT_POOF = 'test.unit.poof'
 TEST_LAUNCH_AGENT_PROG = LAUNCH_AGENT_PROG.replace('poof', 'poofbogus')
 
