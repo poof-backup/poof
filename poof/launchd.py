@@ -24,8 +24,8 @@ import pyperclip
 
 # --- constants ---
 
-LAUNCH_AGENT_OS = "Darwin"
-LAUNCH_AGENT_PATH = os.path.join(os.environ['HOME'], 'Library/LaunchAgents') if platform.system() == LAUNCH_AGENT_OS else None
+LAUNCH_AGENT_REQUIRED_OS = "Darwin"
+LAUNCH_AGENT_PATH = os.path.join(os.environ['HOME'], 'Library/LaunchAgents') if platform.system() == LAUNCH_AGENT_REQUIRED_OS else None
 LAUNCH_AGENT_USER_ID = os.geteuid()
 LAUNCH_AGENT_USER_NAME = getpass.getuser()
 LAUNCH_AGENT_POOF = 'org.pypi.poof'
@@ -101,10 +101,10 @@ def isSupported(hostOS):
     """
     Usage:  hostOS = platform.system()
     """
-    return hostOS == LAUNCH_AGENT_OS
+    return hostOS == LAUNCH_AGENT_REQUIRED_OS
 
 
-def _is_launchdReady(hostOS = LAUNCH_AGENT_OS, launchAgent = LAUNCH_AGENT_POOF):
+def _is_launchdReady(hostOS = LAUNCH_AGENT_REQUIRED_OS, launchAgent = LAUNCH_AGENT_POOF):
     if isSupported(hostOS):
         try:
             serviceTarget = '/'.join((LAUNCHCTL_PROG_DOMAIN_TARGET, launchAgent, ))
@@ -124,7 +124,7 @@ def _is_launchdReady(hostOS = LAUNCH_AGENT_OS, launchAgent = LAUNCH_AGENT_POOF):
         return False
   
 
-def isEnabled(hostOS = LAUNCH_AGENT_OS, launchAgentFile = LAUNCH_AGENT_FULL_PATH, launchAgent = LAUNCH_AGENT_POOF):
+def isEnabled(hostOS = LAUNCH_AGENT_REQUIRED_OS, launchAgentFile = LAUNCH_AGENT_FULL_PATH, launchAgent = LAUNCH_AGENT_POOF):
     if isSupported(hostOS):
         if os.path.exists(launchAgentFile):
             return _is_launchdReady(hostOS, launchAgent)
@@ -151,7 +151,7 @@ def _resolveTemplate(
     return output
 
 
-def enable(hostOS = LAUNCH_AGENT_OS,
+def enable(hostOS = LAUNCH_AGENT_REQUIRED_OS,
             agentFile = LAUNCH_AGENT_FULL_PATH,
             launchAgent = LAUNCH_AGENT_POOF,
             launchAgentProg = LAUNCH_AGENT_PROG,
@@ -164,7 +164,7 @@ def enable(hostOS = LAUNCH_AGENT_OS,
         agentFile,
     )
 
-    if not isEnabled(hostOS, agentFile, launchAgent) and hostOS == LAUNCH_AGENT_OS:
+    if not isEnabled(hostOS, agentFile, launchAgent) and hostOS == LAUNCH_AGENT_REQUIRED_OS:
         _resolveTemplate(launchAgent, launchAgentProg, launchAgentUserName, agentFile)
 
         try:
@@ -186,7 +186,7 @@ def enable(hostOS = LAUNCH_AGENT_OS,
     return True
 
 
-def disable(hostOS = LAUNCH_AGENT_OS,
+def disable(hostOS = LAUNCH_AGENT_REQUIRED_OS,
             agentFile = LAUNCH_AGENT_FULL_PATH,
             launchAgent = LAUNCH_AGENT_POOF,
             launchAgentProg = LAUNCH_AGENT_PROG,
@@ -199,7 +199,7 @@ def disable(hostOS = LAUNCH_AGENT_OS,
         agentFile,
     )
 
-    if isEnabled(hostOS, agentFile, launchAgent) and hostOS == LAUNCH_AGENT_OS:
+    if isEnabled(hostOS, agentFile, launchAgent) and hostOS == LAUNCH_AGENT_REQUIRED_OS:
         try:
             process = subprocess.run(args, capture_output = False)
 
@@ -226,7 +226,7 @@ def disable(hostOS = LAUNCH_AGENT_OS,
     return True
 
 
-def launchdConfig(hostOS = LAUNCH_AGENT_OS,
+def launchdConfig(hostOS = LAUNCH_AGENT_REQUIRED_OS,
             agentFile = LAUNCH_AGENT_FULL_PATH,
             launchAgent = LAUNCH_AGENT_POOF,
             launchAgentProg = LAUNCH_AGENT_PROG,
