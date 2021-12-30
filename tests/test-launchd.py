@@ -19,6 +19,7 @@ from poof.launchd import isSupported
 from poof.launchd import launchdConfig
 
 import os
+import platform
 
 
 # +++ pre-test +++
@@ -38,7 +39,7 @@ def test_isSupported():
 def test__is_launchdReadyFalse():
     assert not _is_launchdReady('Linux')
     assert not _is_launchdReady('Windows')
-    assert not _is_launchdReady(launchAgent = TEST_LAUNCH_AGENT_POOF)
+    assert not _is_launchdReady(hostOS = platform.system(), launchAgent = TEST_LAUNCH_AGENT_POOF)
 
 
 def test_isEnabledFalse():
@@ -65,7 +66,7 @@ def test__resolveTemplate():
 
 def test_enable():
     if LAUNCH_AGENT_OS == 'Darwin':
-        assert enable(targetOS = LAUNCH_AGENT_OS, agentFile = TEST_LAUNCH_AGENT_FULL_PATH, launchAgent = TEST_LAUNCH_AGENT_POOF)
+        assert enable(hostOS = LAUNCH_AGENT_OS, agentFile = TEST_LAUNCH_AGENT_FULL_PATH, launchAgent = TEST_LAUNCH_AGENT_POOF)
     else:
         # Ignore other OSs
         pass
@@ -85,7 +86,7 @@ def test_isEnabled():
 
 def test_disable():
     if LAUNCH_AGENT_OS == 'Darwin':
-        assert disable(targetOS = LAUNCH_AGENT_OS, agentFile = TEST_LAUNCH_AGENT_FULL_PATH, launchAgent = TEST_LAUNCH_AGENT_POOF, unitTest = True)
+        assert disable(hostOS = LAUNCH_AGENT_OS, agentFile = TEST_LAUNCH_AGENT_FULL_PATH, launchAgent = TEST_LAUNCH_AGENT_POOF, unitTest = True)
     else:
         # Ignore other OSs
         pass
@@ -93,12 +94,15 @@ def test_disable():
 
 def test_launchdConfig():
     if LAUNCH_AGENT_OS == 'Darwin':
-        plist = launchdConfig(targetOS = LAUNCH_AGENT_OS, agentFile = TEST_LAUNCH_AGENT_FULL_PATH, launchAgent = TEST_LAUNCH_AGENT_POOF)
+        plist = launchdConfig(hostOS = LAUNCH_AGENT_OS, agentFile = TEST_LAUNCH_AGENT_FULL_PATH, launchAgent = TEST_LAUNCH_AGENT_POOF)
 
         assert len(plist)
 
-        disable(targetOS = LAUNCH_AGENT_OS, agentFile = TEST_LAUNCH_AGENT_FULL_PATH, launchAgent = TEST_LAUNCH_AGENT_POOF)
+        disable(hostOS = LAUNCH_AGENT_OS, agentFile = TEST_LAUNCH_AGENT_FULL_PATH, launchAgent = TEST_LAUNCH_AGENT_POOF)
     else:
         # Ignore other OSs
         pass
+
+
+test__is_launchdReadyFalse()
 
