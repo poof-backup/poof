@@ -29,7 +29,7 @@ LAUNCH_AGENT_PATH = os.path.join(os.environ['HOME'], 'Library/LaunchAgents') if 
 LAUNCH_AGENT_USER_ID = os.geteuid()
 LAUNCH_AGENT_USER_NAME = getpass.getuser()
 LAUNCH_AGENT_POOF = 'org.pypi.poof'
-LAUNCH_AGENT_FILE = '.'.join((LAUNCH_AGENT_POOF, 'plist'))
+LAUNCH_AGENT_FILE = '.'.join((LAUNCH_AGENT_POOF, 'plist')) if platform.system() == LAUNCH_AGENT_REQUIRED_OS else None
 LAUNCH_AGENT_FULL_PATH = os.path.join(LAUNCH_AGENT_PATH, LAUNCH_AGENT_FILE)
 LAUNCH_AGENT_PROG = '/usr/local/bin/poof'
 
