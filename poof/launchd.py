@@ -192,6 +192,10 @@ def disable(hostOS = LAUNCH_AGENT_REQUIRED_OS,
             launchAgentProg = LAUNCH_AGENT_PROG,
             launchAgentUserName = LAUNCH_AGENT_USER_NAME,
             unitTest = False):
+    if not isSupported(platform.system()):
+        click.secho('lpurge is only available on macOS', fg = 'bright_yellow')
+        sys.exit(94)
+
     args = (
         LAUNCHCTL_PROG,
         'bootout',
@@ -232,16 +236,20 @@ def launchdConfig(hostOS = LAUNCH_AGENT_REQUIRED_OS,
             launchAgentProg = LAUNCH_AGENT_PROG,
             launchAgentUserName = LAUNCH_AGENT_USER_NAME):
     
-    if not isEnabled(hostOS, agentFile, launchAgent):
-        enable(hostOS, agentFile, launchAgent, launchAgentProg, launchAgentUserName)
+    if isSupported(platform.system()):
+        if not isEnabled(hostOS, agentFile, launchAgent):
+            enable(hostOS, agentFile, launchAgent, launchAgentProg, launchAgentUserName)
 
-    plist = open(agentFile, 'r').read()
+        plist = open(agentFile, 'r').read()
 
-    click.secho(plist)
-    try:
-        pyperclip.copy(plist)
-    except PyperclipException:
-        pass # Linux?
+        click.secho(plist)
+        try:
+            pyperclip.copy(plist)
+        except PyperclipException:
+            pass # Linux?
 
-    return plist
+        return plist
+    else:
+        click.secho('lconfig is only available on macOS', fg = 'bright_yellow')
+        sys.exit(95)
 
