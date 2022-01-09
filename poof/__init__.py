@@ -36,7 +36,7 @@ import poof.launchd as launchd
 
 __VERSION__ = "1.3.0"
 
-RCLONE_PROG      = '/usr/local/bin/rclone'
+RCLONE_PROG      = '/usr/local/bin/rclone' if sys.platform == 'darwin' else 'rclone'
 RCLONE_PROG_TEST = 'ls' # a program we know MUST exist to the which command
 SPECIAL_DIRS     = (
     'Desktop',
