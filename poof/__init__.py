@@ -8,7 +8,15 @@ from enum import Enum
 from appdirs import AppDirs
 from pyperclip import PyperclipException
 
+from poof.launchd import LAUNCH_AGENT_FILE
+from poof.launchd import LAUNCH_AGENT_FULL_PATH
+from poof.launchd import TEST_LAUNCH_AGENT_FULL_PATH
+from poof.launchd import TEST_LAUNCH_AGENT_POOF
+from poof.launchd import TEST_LAUNCH_AGENT_PROG
+
+
 import configparser
+import copy
 import json
 import os
 import platform
@@ -21,12 +29,14 @@ import uuid
 import click
 import pyperclip
 
+import poof.launchd as launchd
+
 
 # *** constants ***
 
-__VERSION__ = "1.2.9"
+__VERSION__ = "1.3.0"
 
-RCLONE_PROG      = 'rclone'
+RCLONE_PROG      = '/usr/local/bin/rclone' if sys.platform == 'darwin' else 'rclone'
 RCLONE_PROG_TEST = 'ls' # a program we know MUST exist to the which command
 SPECIAL_DIRS     = (
     'Desktop',
@@ -71,6 +81,8 @@ class PoofStatus(Enum):
     MISSING_CONFIG_FILE     = 6
     ENCRYPTION_ENABLED      = 7
     ENCRYPTION_DISABLED     = 8
+    LAUNCHD_ENABLED         = 10
+    LAUNCHD_DISABLED        = 11
     WARN_MISCONFIGURED      = 100
     ERROR_MISSING_KEY       = 200
 
@@ -329,11 +341,10 @@ def backup(conf):
     """
 Backup to remote without wiping out the local data.
 """
-    click.echo(click.style('BACKUP IN PROGRESS - PLEASE DO NOT INTERRUPT', fg='yellow'))
-    click.echo(click.style('v = %s' % conf.verbose, fg='yellow'))
+    click.secho('BACKUP IN PROGRESS - PLEASE DO NOT INTERRUPT - %s' % datetime.now(), fg='yellow')
     outcome = _clone(True, confDir = conf.confDir, confFiles = conf.confFiles, nukeLocal = False, verbose = conf.verbose)
     h, m, s = _timeLapsed()
-    click.echo(click.style(('BACKUP COMPLETED in %d:%02d:%02d' % (h, m, s)), fg='green'))
+    click.echo(click.style(('BACKUP COMPLETED in %d:%02d:%02d\n' % (h, m, s)), fg='green'))
 
     return outcome
 
@@ -344,10 +355,10 @@ def download(conf):
     """
 Download the files from the cloud storage into their corresponding directories.
 """
-    click.echo(click.style('DOWNLOAD SYNC IN PROGRESS - PLEASE DO NOT INTERRUPT', fg='yellow'))
+    click.secho('DOWNLOAD SYNC IN PROGRESS - PLEASE DO NOT INTERRUPT - %s' % datetime.now(), fg='yellow')
     outcome = _clone(False, confDir = conf.confDir, confFiles = conf.confFiles, verbose = conf.verbose)
     h, m, s = _timeLapsed()
-    click.echo(click.style(('DOWNLOAD COMPLETED in %d:%02d:%02d' % (h, m, s)), fg='green'))
+    click.echo(click.style(('DOWNLOAD COMPLETED in %d:%02d:%02d\n' % (h, m, s)), fg='green'))
 
     return outcome
 
@@ -357,7 +368,10 @@ def paths():
     """
 Output the platform-specific paths to the poof configuration files.
 """
-    for key, item in POOF_CONFIG_FILES.items():
+    poofConfFiles = copy.deepcopy(POOF_CONFIG_FILES)
+    poofConfFiles[LAUNCH_AGENT_FILE] = LAUNCH_AGENT_FULL_PATH
+
+    for key, item in poofConfFiles.items():
         click.echo('%s = %s' % (key, item))
 
     return True
@@ -381,6 +395,18 @@ def _neuter(confDir = POOF_CONFIG_DIR, unitTest = False):
         except:
             pass # Ignore if it requires root
 
+    try:
+        if unitTest:
+            launchd.disable(
+                agentFile = TEST_LAUNCH_AGENT_FULL_PATH,
+                launchAgent = TEST_LAUNCH_AGENT_POOF,
+                launchAgentProg = TEST_LAUNCH_AGENT_PROG,
+                unitTest = unitTest)
+        else:
+            launchd.disable()
+    except:
+        pass
+
 
 @main.command()
 @globalConf
@@ -397,10 +423,10 @@ def upload(conf):
     """
 Upload to remote and wipe out the local data.
 """
-    click.echo(click.style('UPLOAD SYNC IN PROGRESS - PLEASE DO NOT INTERRUPT', fg='yellow'))
+    click.secho('UPLOAD SYNC IN PROGRESS - PLEASE DO NOT INTERRUPT - %s' % datetime.now(), fg='yellow')
     outcome = _clone(True, confDir = conf.confDir, confFiles = conf.confFiles, verbose = conf.verbose)
     h, m, s = _timeLapsed()
-    click.echo(click.style(('UPLOAD COMPLETED in %d:%02d:%02d' % (h, m, s)), fg='green'))
+    click.echo(click.style(('UPLOAD COMPLETED in %d:%02d:%02d\n' % (h, m, s)), fg='green'))
 
     return outcome
 
@@ -459,6 +485,16 @@ def _verifyBogusValuesIn(component, conf, section, bogusSecrets):
     return PoofStatus.OK
 
 
+def _display_launchdStatus():
+    if platform.system() == 'Darwin':
+        status = PoofStatus.LAUNCHD_ENABLED if launchd.isEnabled() else PoofStatus.LAUNCHD_DISABLED
+        click.secho('launchd enabled? - %s' % status)
+
+        return True
+
+    return False
+
+
 def _verify(component = RCLONE_PROG, confFiles = POOF_CONFIG_FILES, allComponents = True):
     status = PoofStatus.OK
 
@@ -503,6 +539,8 @@ def _verify(component = RCLONE_PROG, confFiles = POOF_CONFIG_FILES, allComponent
 
         encryptionEnabled = PoofStatus.ENCRYPTION_ENABLED if _encryptionIsEnabled(poofConf, cloningConf) else PoofStatus.ENCRYPTION_DISABLED
         click.echo('encryption enabled? - %s' % encryptionEnabled)
+
+        _display_launchdStatus()
 
         click.echo('configuration appears to be valid and has valid credentials')
 
@@ -572,4 +610,22 @@ def cryptoggle(conf):
     poofConf = _config(confFiles = conf.confFiles, showConfig = False)
     cloneConf = _cconfig(confFiles = conf.confFiles, showConfig = False)
     _cryptoggle(poofConf, cloneConf, conf.confFiles)
+
+
+@main.command()
+@globalConf
+def lconfig(conf):
+    """
+    Set poof to run every 6 hours via launchd
+    """
+    launchd.launchdConfig()
+
+
+@main.command()
+@globalConf
+def lpurge(conf):
+    """
+    Purge poof from launchd and ~/Library/LaunchAgents
+    """
+    launchd.disable()
 

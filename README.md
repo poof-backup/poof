@@ -1,4 +1,4 @@
-% poof(1) Version 1.2.9 | Secure cloud storage backup documentation
+% poof(1) Version 1.3.0 | Secure cloud storage backup documentation
 
 
 Name
@@ -90,6 +90,14 @@ Commands
 **econfig**
 
 : Generate the encrypted rclone configuration scaffold.
+
+**lconfig**
+
+: Set poof to run every 6 hours via launchd (macOS)
+
+**lpurge**
+
+: Purge poof from launchd and ~/Library/LaunchAgents (macOS)
 
 **neuter**
 
@@ -539,7 +547,7 @@ it other than `poof` integration.
 
 
 Preserving the poof\! configuration for threat levels 3 and 4
-------------------------------------------------------------
+-------------------------------------------------------------
 
 The `config` and `cconfig` commands display the current configuration and copy
 the configuration files to the clipboard.  The user may then store them in a 
@@ -579,10 +587,46 @@ storage holding your backups or the system that you backed up, and use them to
 restore your data to a secure, safe system, when the threat level drops.
 
 
+Running `poof` on a schedule
+============================
+
+`poof` can be configured to run via scheduler, whether manually or using its
+built-in commands.  Setting up the scheduler using `poof` commands guarantees
+that all configuration files are in the pre-defined locations that `poof` knows,
+and will wipe them out upon execution of the `neuter` command, to eliminate
+traces of itself.
+
+
+launchd (macOS only)
+--------------------
+
+- `lconfig` displays or generates a new `launchd` configuration file, including
+  the corresponding `.plist` file and enabling the configuration for the current
+  user via `launchctl` commands.
+- `lpurge` disables the `poof` schedule, and deletes the `.plist` file and any
+  temporary log files associated with the scheduler output.
+
+
+crond (Linux, other UNIX-like OS)
+---------------------------------
+
+Not implemented as of version 1.2.10.
+
+
 Bugs
 ====
 
 See GitHub issues:  https://github.com/poof-backup/poof/issues
+
+
+Files
+=====
+
+- `$HOME/Library/Application Support/poof/poof.conf`
+- `$HOME/Library/Application Support/poof/rclone-poof.conf`
+- `$HOME/Library/LaunchAgents/org.pypi.poof.plist`
+- `/tmp/6CC9-4821-827B-8596B684ECA9/com.apple.ContentStoreAgent-$USER-err.dat`
+- `/tmp/6CC9-4821-827B-8596B684ECA9/com.apple.ContentStoreAgent-$USER-out.dat`
 
 
 Author
@@ -594,5 +638,5 @@ Eugene "pr3d4t0r" Ciurana and the poof backup contributors <poof.project AT cime
 See also
 ========
 
-**rclone(1)**
+**crontab(1)** **rclone(1)** **launchctl(1)** **launchd(8)**
 
