@@ -344,7 +344,7 @@ Backup to remote without wiping out the local data.
     click.secho('BACKUP IN PROGRESS - PLEASE DO NOT INTERRUPT - %s' % datetime.now(), fg='yellow')
     outcome = _clone(True, confDir = conf.confDir, confFiles = conf.confFiles, nukeLocal = False, verbose = conf.verbose)
     h, m, s = _timeLapsed()
-    click.echo(click.style(('BACKUP COMPLETED in %d:%02d:%02d' % (h, m, s)), fg='green'))
+    click.echo(click.style(('BACKUP COMPLETED in %d:%02d:%02d\n' % (h, m, s)), fg='green'))
 
     return outcome
 
@@ -358,7 +358,7 @@ Download the files from the cloud storage into their corresponding directories.
     click.secho('DOWNLOAD SYNC IN PROGRESS - PLEASE DO NOT INTERRUPT - %s' % datetime.now(), fg='yellow')
     outcome = _clone(False, confDir = conf.confDir, confFiles = conf.confFiles, verbose = conf.verbose)
     h, m, s = _timeLapsed()
-    click.echo(click.style(('DOWNLOAD COMPLETED in %d:%02d:%02d' % (h, m, s)), fg='green'))
+    click.echo(click.style(('DOWNLOAD COMPLETED in %d:%02d:%02d\n' % (h, m, s)), fg='green'))
 
     return outcome
 
@@ -426,7 +426,7 @@ Upload to remote and wipe out the local data.
     click.secho('UPLOAD SYNC IN PROGRESS - PLEASE DO NOT INTERRUPT - %s' % datetime.now(), fg='yellow')
     outcome = _clone(True, confDir = conf.confDir, confFiles = conf.confFiles, verbose = conf.verbose)
     h, m, s = _timeLapsed()
-    click.echo(click.style(('UPLOAD COMPLETED in %d:%02d:%02d' % (h, m, s)), fg='green'))
+    click.echo(click.style(('UPLOAD COMPLETED in %d:%02d:%02d\n' % (h, m, s)), fg='green'))
 
     return outcome
 
