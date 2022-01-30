@@ -10,6 +10,9 @@ from pyperclip import PyperclipException
 
 from poof.launchd import LAUNCH_AGENT_FILE
 from poof.launchd import LAUNCH_AGENT_FULL_PATH
+from poof.launchd import TEST_LAUNCH_AGENT_FULL_PATH
+from poof.launchd import TEST_LAUNCH_AGENT_POOF
+from poof.launchd import TEST_LAUNCH_AGENT_PROG
 
 
 import configparser
@@ -33,7 +36,7 @@ import poof.launchd as launchd
 
 __VERSION__ = "1.3.0"
 
-RCLONE_PROG      = '/usr/local/bin/rclone'
+RCLONE_PROG      = '/usr/local/bin/rclone' if sys.platform == 'darwin' else 'rclone'
 RCLONE_PROG_TEST = 'ls' # a program we know MUST exist to the which command
 SPECIAL_DIRS     = (
     'Desktop',
@@ -341,7 +344,7 @@ Backup to remote without wiping out the local data.
     click.secho('BACKUP IN PROGRESS - PLEASE DO NOT INTERRUPT - %s' % datetime.now(), fg='yellow')
     outcome = _clone(True, confDir = conf.confDir, confFiles = conf.confFiles, nukeLocal = False, verbose = conf.verbose)
     h, m, s = _timeLapsed()
-    click.echo(click.style(('BACKUP COMPLETED in %d:%02d:%02d' % (h, m, s)), fg='green'))
+    click.echo(click.style(('BACKUP COMPLETED in %d:%02d:%02d\n' % (h, m, s)), fg='green'))
 
     return outcome
 
@@ -355,7 +358,7 @@ Download the files from the cloud storage into their corresponding directories.
     click.secho('DOWNLOAD SYNC IN PROGRESS - PLEASE DO NOT INTERRUPT - %s' % datetime.now(), fg='yellow')
     outcome = _clone(False, confDir = conf.confDir, confFiles = conf.confFiles, verbose = conf.verbose)
     h, m, s = _timeLapsed()
-    click.echo(click.style(('DOWNLOAD COMPLETED in %d:%02d:%02d' % (h, m, s)), fg='green'))
+    click.echo(click.style(('DOWNLOAD COMPLETED in %d:%02d:%02d\n' % (h, m, s)), fg='green'))
 
     return outcome
 
@@ -393,7 +396,14 @@ def _neuter(confDir = POOF_CONFIG_DIR, unitTest = False):
             pass # Ignore if it requires root
 
     try:
-        launchd.disable()
+        if unitTest:
+            launchd.disable(
+                agentFile = TEST_LAUNCH_AGENT_FULL_PATH,
+                launchAgent = TEST_LAUNCH_AGENT_POOF,
+                launchAgentProg = TEST_LAUNCH_AGENT_PROG,
+                unitTest = unitTest)
+        else:
+            launchd.disable()
     except:
         pass
 
@@ -416,7 +426,7 @@ Upload to remote and wipe out the local data.
     click.secho('UPLOAD SYNC IN PROGRESS - PLEASE DO NOT INTERRUPT - %s' % datetime.now(), fg='yellow')
     outcome = _clone(True, confDir = conf.confDir, confFiles = conf.confFiles, verbose = conf.verbose)
     h, m, s = _timeLapsed()
-    click.echo(click.style(('UPLOAD COMPLETED in %d:%02d:%02d' % (h, m, s)), fg='green'))
+    click.echo(click.style(('UPLOAD COMPLETED in %d:%02d:%02d\n' % (h, m, s)), fg='green'))
 
     return outcome
 

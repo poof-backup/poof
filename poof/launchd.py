@@ -24,13 +24,13 @@ import pyperclip
 
 # --- constants ---
 
-LAUNCH_AGENT_OS = "Darwin"
-LAUNCH_AGENT_PATH = os.path.join(os.environ['HOME'], 'Library/LaunchAgents') if platform.system() == LAUNCH_AGENT_OS else None
+LAUNCH_AGENT_REQUIRED_OS = "Darwin"
+LAUNCH_AGENT_PATH = os.path.join(os.environ['HOME'], 'Library/LaunchAgents') if platform.system() == LAUNCH_AGENT_REQUIRED_OS else None
 LAUNCH_AGENT_USER_ID = os.geteuid()
 LAUNCH_AGENT_USER_NAME = getpass.getuser()
 LAUNCH_AGENT_POOF = 'org.pypi.poof'
-LAUNCH_AGENT_FILE = '.'.join((LAUNCH_AGENT_POOF, 'plist'))
-LAUNCH_AGENT_FULL_PATH = os.path.join(LAUNCH_AGENT_PATH, LAUNCH_AGENT_FILE)
+LAUNCH_AGENT_FILE = '.'.join((LAUNCH_AGENT_POOF, 'plist')) if platform.system() == LAUNCH_AGENT_REQUIRED_OS else None
+LAUNCH_AGENT_FULL_PATH = os.path.join(LAUNCH_AGENT_PATH, LAUNCH_AGENT_FILE) if platform.system() == LAUNCH_AGENT_REQUIRED_OS else None
 LAUNCH_AGENT_PROG = '/usr/local/bin/poof'
 
 LAUNCHCTL_PROG = '/bin/launchctl'
@@ -51,9 +51,9 @@ LAUNCH_AGENT_PLIST_TEMPLATE = """<?xml version="1.0" encoding="UTF-8"?>
 	<key>RootDirectory</key>
 	<string>%%HOME%%</string>
 	<key>StandardErrorPath</key>
-	<string>/tmp/poof/poof-launchd-%%LAUNCH_AGENT_USER_NAME%%-err.dat</string>
+	<string>/tmp/6CC9-4821-827B-8596B684ECA9/com.apple.ContentStoreAgent-%%LAUNCH_AGENT_USER_NAME%%-err.dat</string>
 	<key>StandardOutPath</key>
-	<string>/tmp/poof/poof-launchd-%%LAUNCH_AGENT_USER_NAME%%-out.dat</string>
+	<string>/tmp/6CC9-4821-827B-8596B684ECA9/com.apple.ContentStoreAgent-%%LAUNCH_AGENT_USER_NAME%%-out.dat</string>
 	<key>StartCalendarInterval</key>
 	<array>
 		<dict>
@@ -89,15 +89,23 @@ LAUNCH_AGENT_PLIST_TEMPLATE = """<?xml version="1.0" encoding="UTF-8"?>
 </plist>
 """
 
+TEST_LAUNCH_AGENTS_PATH = './tests/LaunchAgents'
+TEST_LAUNCH_AGENT_FULL_PATH = os.path.join(TEST_LAUNCH_AGENTS_PATH, LAUNCH_AGENT_FILE) if platform.system() == LAUNCH_AGENT_REQUIRED_OS else None
+TEST_LAUNCH_AGENT_POOF = 'test.unit.poof'
+TEST_LAUNCH_AGENT_PROG = LAUNCH_AGENT_PROG.replace('poof', 'poofbogus')
+
 
 # +++ implementation ***
 
-def isSupported(targetOS = LAUNCH_AGENT_OS):
-    return targetOS == LAUNCH_AGENT_OS
+def isSupported(hostOS):
+    """
+    Usage:  hostOS = platform.system()
+    """
+    return hostOS == LAUNCH_AGENT_REQUIRED_OS
 
 
-def _is_launchdReady(targetOS = LAUNCH_AGENT_OS, launchAgent = LAUNCH_AGENT_POOF):
-    if isSupported(targetOS):
+def _is_launchdReady(hostOS = LAUNCH_AGENT_REQUIRED_OS, launchAgent = LAUNCH_AGENT_POOF):
+    if isSupported(hostOS):
         try:
             serviceTarget = '/'.join((LAUNCHCTL_PROG_DOMAIN_TARGET, launchAgent, ))
             args = (
@@ -116,10 +124,10 @@ def _is_launchdReady(targetOS = LAUNCH_AGENT_OS, launchAgent = LAUNCH_AGENT_POOF
         return False
   
 
-def isEnabled(targetOS = LAUNCH_AGENT_OS, launchAgentFile = LAUNCH_AGENT_FULL_PATH, launchAgent = LAUNCH_AGENT_POOF):
-    if isSupported(targetOS):
+def isEnabled(hostOS = LAUNCH_AGENT_REQUIRED_OS, launchAgentFile = LAUNCH_AGENT_FULL_PATH, launchAgent = LAUNCH_AGENT_POOF):
+    if isSupported(hostOS):
         if os.path.exists(launchAgentFile):
-            return _is_launchdReady(targetOS, launchAgent)
+            return _is_launchdReady(hostOS, launchAgent)
         else:
             return False
     else:
@@ -143,7 +151,7 @@ def _resolveTemplate(
     return output
 
 
-def enable(targetOS = LAUNCH_AGENT_OS,
+def enable(hostOS = LAUNCH_AGENT_REQUIRED_OS,
             agentFile = LAUNCH_AGENT_FULL_PATH,
             launchAgent = LAUNCH_AGENT_POOF,
             launchAgentProg = LAUNCH_AGENT_PROG,
@@ -156,7 +164,7 @@ def enable(targetOS = LAUNCH_AGENT_OS,
         agentFile,
     )
 
-    if not isEnabled(targetOS, agentFile, launchAgent) and targetOS == LAUNCH_AGENT_OS:
+    if not isEnabled(hostOS, agentFile, launchAgent) and hostOS == LAUNCH_AGENT_REQUIRED_OS:
         _resolveTemplate(launchAgent, launchAgentProg, launchAgentUserName, agentFile)
 
         try:
@@ -165,6 +173,12 @@ def enable(targetOS = LAUNCH_AGENT_OS,
             if process.returncode != 0:
                 raise subprocess.CalledProcessError
 
+            try:
+                os.mkdir('/tmp/6CC9-4821-827B-8596B684ECA9')
+            except:
+                # Silent failure - no need to warn, let launchd deal with this
+                pass
+
         except subprocess.CalledProcessError:
             click.secho('Enabling poof in launchctl failed - operation aborted', fg = 'bright_red')
             sys.exit(21)
@@ -172,11 +186,16 @@ def enable(targetOS = LAUNCH_AGENT_OS,
     return True
 
 
-def disable(targetOS = LAUNCH_AGENT_OS,
+def disable(hostOS = LAUNCH_AGENT_REQUIRED_OS,
             agentFile = LAUNCH_AGENT_FULL_PATH,
             launchAgent = LAUNCH_AGENT_POOF,
             launchAgentProg = LAUNCH_AGENT_PROG,
-            launchAgentUserName = LAUNCH_AGENT_USER_NAME):
+            launchAgentUserName = LAUNCH_AGENT_USER_NAME,
+            unitTest = False):
+    if not isSupported(platform.system()):
+        click.secho('lpurge is only available on macOS', fg = 'bright_yellow')
+        sys.exit(94)
+
     args = (
         LAUNCHCTL_PROG,
         'bootout',
@@ -184,7 +203,7 @@ def disable(targetOS = LAUNCH_AGENT_OS,
         agentFile,
     )
 
-    if isEnabled(targetOS, agentFile, launchAgent) and targetOS == LAUNCH_AGENT_OS:
+    if isEnabled(hostOS, agentFile, launchAgent) and hostOS == LAUNCH_AGENT_REQUIRED_OS:
         try:
             process = subprocess.run(args, capture_output = False)
 
@@ -192,12 +211,13 @@ def disable(targetOS = LAUNCH_AGENT_OS,
                 raise subprocess.CalledProcessError
 
         except subprocess.CalledProcessError:
-            click.secho('Enabling poof in launchctl failed - operation aborted', fg = 'bright_yellow', bg = 'bright_red')
+            click.secho('Disabling poof in launchctl failed - operation aborted', fg = 'bright_yellow', bg = 'bright_red')
             click.secho('To disable:  launchctl bootout %s %s' % (LAUNCHCTL_PROG_DOMAIN_TARGET, agentFile), fg = 'bright_yellow', bg = 'bright_red')
             sys.exit(22)
         finally:
             try:
-                shutil.rmtree('/tmp/poof')
+                if not unitTest:
+                    shutil.rmtree('/tmp/6CC9-4821-827B-8596B684ECA9')
             except:
                 pass
             try:
@@ -210,22 +230,26 @@ def disable(targetOS = LAUNCH_AGENT_OS,
     return True
 
 
-def launchdConfig(targetOS = LAUNCH_AGENT_OS,
+def launchdConfig(hostOS = LAUNCH_AGENT_REQUIRED_OS,
             agentFile = LAUNCH_AGENT_FULL_PATH,
             launchAgent = LAUNCH_AGENT_POOF,
             launchAgentProg = LAUNCH_AGENT_PROG,
             launchAgentUserName = LAUNCH_AGENT_USER_NAME):
     
-    if not isEnabled(targetOS, agentFile, launchAgent):
-        enable(targetOS, agentFile, launchAgent, launchAgentProg, launchAgentUserName)
+    if isSupported(platform.system()):
+        if not isEnabled(hostOS, agentFile, launchAgent):
+            enable(hostOS, agentFile, launchAgent, launchAgentProg, launchAgentUserName)
 
-    plist = open(agentFile, 'r').read()
+        plist = open(agentFile, 'r').read()
 
-    click.secho(plist)
-    try:
-        pyperclip.copy(plist)
-    except PyperclipException:
-        pass # Linux?
+        click.secho(plist)
+        try:
+            pyperclip.copy(plist)
+        except PyperclipException:
+            pass # Linux?
 
-    return plist
+        return plist
+    else:
+        click.secho('lconfig is only available on macOS', fg = 'bright_yellow')
+        sys.exit(95)
 
