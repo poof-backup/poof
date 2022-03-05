@@ -9,8 +9,10 @@ DEVPI_HOST=$(shell cat devpi-hostname.txt)
 DEVPI_PASSWORD=$(shell cat ./devpi-password.txt)
 DEVPI_USER=$(shell cat ./devpi-user.txt)
 DIST=./dist
+FROZEN_PACKAGES=/tmp/requirements-frozen.txt
 MANPAGES=./manpages
 PACKAGE=$(shell cat package.txt)
+PACKAGES_UPDATE=/tmp/packages-update.txt
 REQUIREMENTS=requirements.txt
 VERSION=$(shell echo "from poof import __VERSION__; print(__VERSION__)" | python)
 
@@ -49,8 +51,11 @@ install:
 
 
 libupdate:
+	pip list --outdated | awk 'NR > 2 { print($$1); }' | tee $(PACKAGES_UPDATE)
 	pip install -U pip
-	pip install -Ur $(REQUIREMENTS)
+	pip install -Ur $(PACKAGES_UPDATE)
+	pip freeze -r $(REQUIREMENTS) | awk '/##/ { exit(0); } { print($$0); }' > $(FROZEN_PACKAGES)
+	mv $(FROZEN_PACKAGES) $(REQUIREMENTS)
 
 
 local:

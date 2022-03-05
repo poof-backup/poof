@@ -1,4 +1,4 @@
-appdirs
-click
-psutil
-pyperclip
+appdirs==1.4.4
+click==8.0.4
+psutil==5.9.0
+pyperclip==1.8.2
