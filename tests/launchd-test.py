@@ -1,5 +1,4 @@
-# See: https://github.com/pr3d4t0r/poof/blob/master/LICENSE.txt
-# vim: set fileencoding=utf-8:
+# See: https://github.com/poof-backup/poof/blob/master/LICENSE.txt
 
 
 from poof.launchd import LAUNCH_AGENT_FILE

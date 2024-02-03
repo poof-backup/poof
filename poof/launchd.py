@@ -1,5 +1,4 @@
-# See: https://github.com/pr3d4t0r/poof/blob/master/LICENSE.txt
-# vim: set fileencoding=utf-8:
+# See: https://github.com/poof-backup/poof/blob/master/LICENSE.txt
 
 
 """
@@ -122,7 +121,7 @@ def _is_launchdReady(hostOS = LAUNCH_AGENT_REQUIRED_OS, launchAgent = LAUNCH_AGE
         return True
     else:
         return False
-  
+
 
 def isEnabled(hostOS = LAUNCH_AGENT_REQUIRED_OS, launchAgentFile = LAUNCH_AGENT_FULL_PATH, launchAgent = LAUNCH_AGENT_POOF):
     if isSupported(hostOS):
@@ -136,7 +135,7 @@ def isEnabled(hostOS = LAUNCH_AGENT_REQUIRED_OS, launchAgentFile = LAUNCH_AGENT_
 
 def _resolveTemplate(
         launchAgent = LAUNCH_AGENT_POOF,
-        launchAgentProg = LAUNCH_AGENT_PROG, 
+        launchAgentProg = LAUNCH_AGENT_PROG,
         launchAgentUserName = LAUNCH_AGENT_USER_NAME,
         launchAgentFile = LAUNCH_AGENT_FULL_PATH):
 
@@ -235,7 +234,7 @@ def launchdConfig(hostOS = LAUNCH_AGENT_REQUIRED_OS,
             launchAgent = LAUNCH_AGENT_POOF,
             launchAgentProg = LAUNCH_AGENT_PROG,
             launchAgentUserName = LAUNCH_AGENT_USER_NAME):
-    
+
     if isSupported(platform.system()):
         if not isEnabled(hostOS, agentFile, launchAgent):
             enable(hostOS, agentFile, launchAgent, launchAgentProg, launchAgentUserName)
