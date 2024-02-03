@@ -1,0 +1,59 @@
+# See: https://github.com/poof-backup/poof/blob/master/LICENSE.txt
+
+[build-system]
+requires = [ 'setuptools' ]
+build-backend = 'setuptools.build_meta'
+
+
+[metadata]
+url = 'https://github.com/poof-backup/poof'
+
+
+[project]
+authors = [
+    { name = 'The poof-backup dev team', email = 'poof.project@cime.net' }
+]
+classifiers = [
+    'Intended Audience :: Other Audience',
+    'License :: OSI Approved :: BSD License',
+    'Operating System :: MacOS',
+    'Operating System :: Unix',
+    'Programming Language :: Python :: 3',
+    'Programming Language :: Python :: 3.7',
+    'Topic :: System :: Archiving :: Backup',
+    'Topic :: Utilities',
+]
+description = 'poof backup - instant, secure backup to a cloud drive'
+dynamic = [
+    'dependencies',
+    'version',
+]
+name = 'poof'
+readme = 'README.md'
+requires-python = '>=3.7'
+
+
+# [project.scripts]
+# poofchk = "poof.healthmonitor:main"
+# poofwhoami="poof.selfie:main"
+
+
+[tool.pytest.ini_options]
+addopts = "-sv"
+testpaths = [
+    "tests"
+]
+
+
+[tool.setuptools]
+include-package-data = true
+packages = [
+    'poof',
+    # "tests", # because test modules import objects from other test modules
+]
+
+
+[tool.setuptools.dynamic]
+dependencies = { file = 'requirements.txt' }
+version = { attr = 'poof.__VERSION__' }
+
