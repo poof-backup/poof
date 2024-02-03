@@ -1,4 +1,4 @@
-% poof(1) Version 1.3.2 | Secure cloud storage backup documentation
+% poof(1) Version 1.3.4 | Secure cloud storage backup documentation
 
 
 Name
@@ -132,7 +132,7 @@ Supported Storage
 
 
 The development team is evaluating other storage systems and plan to extend
-support in poof! backup 2.0, expected to be released in mid 2022.Q1.
+support in poof! backup 2.0, expected to be released in mid 2024.Q2.
 
 
 Files
