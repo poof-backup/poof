@@ -22,15 +22,14 @@ all: ALWAYS
 	make package
 
 
-# TODO: Use rm -Rfv $$(find $(PACKAGE) | awk '/__pycache__$$/') after the poof
-#       package is claimed to this project by PyPI.
 clean:
 	rm -Rf $(BUILD)/*
 	rm -Rf $(DIST)/*
 	rm -Rf $(MANPAGES)/*
-	rm -Rfv $$(find poof/ | awk '/__pycache__$$/')
+	rm -Rfv $$(find $(PACKAGE)/ | awk '/__pycache__$$/')
 	rm -Rfv $$(find tests | awk '/__pycache__$$/')
 	rm -Rfv $$(find . | awk '/.ipynb_checkpoints/')
+	mkdir -p ./dist
 	pushd ./dist ; pip uninstall -y $(PACKAGE)==$(VERSION) || true ; popd
 
 
@@ -53,7 +52,7 @@ libupdate:
 
 
 local:
-	pip install -e .
+	pip install --no-dependencies -e .
 
 
 manpage:
@@ -68,7 +67,7 @@ nuke: ALWAYS
 
 package:
 	pip install -r $(REQUIREMENTS)
-	python setup.py bdist_wheel
+	python -m build -wn
 
 
 # The publish: target is for PyPI, not for the devpi server.
@@ -92,16 +91,13 @@ targets:
 	@cat Makefile| awk '/:/ && !/^#/ && !/targets/ && !/Makefile/ { gsub("ALWAYS", ""); gsub(":", ""); print; } /^ALWAYS/ { next; }'
 
 
-# TODO: Use rm -Rfv $$(find $(PACKAGE) | awk '/__pycache__$$/') after the poof
-#       package is claimed to this project by PyPI.
 test: ALWAYS
 	@echo "Version = $(VERSION)"
-	pip install -r requirements.txt
-	pip install -e .
+	@make local
 	pytest -v ./tests/poof-test.py
 	pytest -v ./tests/launchd-test.py
 	pip uninstall -y $(PACKAGE)==$(VERSION) || true
-	rm -Rfv $$(find poof/ | awk '/__pycache__$$/')
+	rm -Rfv $$(find $(PACKAGE)/ | awk '/__pycache__$$/')
 	rm -Rfv $$(find tests | awk '/__pycache__$$/')
 
 
