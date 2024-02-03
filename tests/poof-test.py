@@ -1,5 +1,4 @@
-# See: https://github.com/pr3d4t0r/poof/blob/master/LICENSE.txt
-# vim: set fileencoding=utf-8:
+# See: https://github.com/poof-backup/poof/blob/master/LICENSE.txt
 
 
 from datetime import timedelta
@@ -139,7 +138,7 @@ def test__verify():
     assert _verify(component = bogusCloningProgram, confFiles = TEST_POOF_CONF_FILES) == (bogusCloningProgram, PoofStatus.MISSING_CLONING_PROGRAM)
     assert _verify(component = RCLONE_PROG_TEST, confFiles = TEST_POOF_CONF_FILES, allComponents = False) == (None, PoofStatus.OK)
     assert _verify(component = RCLONE_PROG_TEST, confFiles = TEST_POOF_CONF_FILES) == ('poof.conf', PoofStatus.MISSING_CONFIG_FILE)
-    poofConf = _config(TEST_POOF_CONF_FILES, TEST_POOF_CONF_DIR) 
+    poofConf = _config(TEST_POOF_CONF_FILES, TEST_POOF_CONF_DIR)
     assert _verify(component = RCLONE_PROG_TEST, confFiles = TEST_POOF_CONF_FILES) == ('rclone-poof.conf', PoofStatus.MISSING_CONFIG_FILE)
     _cconfig(TEST_POOF_CONF_FILES, TEST_POOF_CONF_DIR)
 

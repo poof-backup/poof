@@ -1,4 +1,4 @@
-% poof(1) Version 1.3.0 | Secure cloud storage backup documentation
+% poof(1) Version 1.3.2 | Secure cloud storage backup documentation
 
 
 Name
@@ -34,7 +34,7 @@ poof\! leverages tried-and-true tools to perform its tasks:
   cloud storage.
 
 _Experimental versions of `poof` leverage other operating system and third-party
-tools, discussed in this documentation.  For details, see the [`poof` GitHub 
+tools, discussed in this documentation.  For details, see the [`poof` GitHub
 repository](https://github.com/poof-backup/poof)._
 
 
@@ -131,7 +131,7 @@ Supported Storage
 : AWS Simple Storage Service
 
 
-The development team is evaluating other storage systems and plan to extend 
+The development team is evaluating other storage systems and plan to extend
 support in poof! backup 2.0, expected to be released in mid 2022.Q1.
 
 
@@ -140,7 +140,7 @@ Files
 
 *poof.conf*
 
-: Cloud storage remote specification, paths to backup/upload, bucket and file 
+: Cloud storage remote specification, paths to backup/upload, bucket and file
   system information.
 
 *rclone-poof.conf*
@@ -175,7 +175,7 @@ Installing `rclone`
 Install `rclone` in your system via https://rclone.org/install/
 
 `rclone` makes an identical copy of directories and their contents to the
-desired cloud storage, including the correct time stamps and permissions.  It's 
+desired cloud storage, including the correct time stamps and permissions.  It's
 a more reliable mechanism than building that logic in `poof`.
 
 
@@ -234,7 +234,7 @@ backup or upload to the cloud storage:
 - A `poof` configuration backup directory
 - One end-user backup directory
 
-In most cases, `Documents` ought to be the first end-user directory. 
+In most cases, `Documents` ought to be the first end-user directory.
 
 List the configuration paths to make the necessary updates:
 
@@ -346,7 +346,7 @@ until automation, key storage, and operational security issues are resolved.
 
 Encryption details:
 
-1. File content encryption uses [NaCl SecretBox](https://pkg.go.dev/golang.org/x/crypto/nacl/secretbox) 
+1. File content encryption uses [NaCl SecretBox](https://pkg.go.dev/golang.org/x/crypto/nacl/secretbox)
 1. File and directory names are separated by '/', padded to a multiple of 16
    bytes, then encrypted with EME and AES with a 256-bit key.
 
@@ -529,7 +529,7 @@ out upon completion.  I do not trust the cloud storage provider.
   new system
 - The current system must be surrendered to a distrusted third-party like a
   repair shop
-- The cloud storage provider is known or suspected to inspect or mine storage 
+- The cloud storage provider is known or suspected to inspect or mine storage
   contents or to grant access to third-parties to do so
 
 
@@ -550,7 +550,7 @@ Preserving the poof\! configuration for threat levels 3 and 4
 -------------------------------------------------------------
 
 The `config` and `cconfig` commands display the current configuration and copy
-the configuration files to the clipboard.  The user may then store them in a 
+the configuration files to the clipboard.  The user may then store them in a
 separate, secure, unrelated system for later restoring the files.  For example,
 this command:
 
