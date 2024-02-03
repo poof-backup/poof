@@ -17,11 +17,7 @@ from poof import _cryptoggle
 from poof import _display_launchdStatus
 from poof import _econfig
 from poof import _encryptionIsEnabled
-from poof import _getNukeDirectoryArgsLinux
-from poof import _getNukeDirectoryArgsMac
-from poof import _getNukeDirectoryArgsWindows
 from poof import _neuter
-from poof import _nukeDirectory
 from poof import _timeLapsed
 from poof import _verify
 from poof import _verifyBogusValuesIn
@@ -189,37 +185,6 @@ def test__neuter():
 
 def test_paths():
     assert CliRunner().invoke(paths)
-
-
-def test__getNukeDirectoryArgsMac():
-    path = '/tmp/bogus'
-    argsList = _getNukeDirectoryArgsMac(path)
-    assert isinstance(argsList, tuple)
-    assert argsList[1] == '-Prf'
-
-
-def test__getNukeDirectoryArgsLinux():
-    path = '/tmp/bogus'
-    argsList = _getNukeDirectoryArgsLinux(path)
-    assert isinstance(argsList, tuple)
-    assert argsList[1] == '-Rf'
-
-
-def test__getNukeDirectoryArgsWindows():
-    path = '/tmp/bogus'
-    with pytest.raises(NotImplementedError):
-        _getNukeDirectoryArgsWindows(path)
-        pass
-
-
-def test__nukeDirectory():
-    bogusDir = os.path.join(TEST_POOF_CONF_DIR, 'bogusxxxxx1213')
-    status, error = _nukeDirectory(bogusDir)
-    assert not status
-
-    os.makedirs(bogusDir, exist_ok = True)
-    status, error = _nukeDirectory(bogusDir)
-    assert status
 
 
 def test__econfig():
