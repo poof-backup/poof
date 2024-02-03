@@ -6,6 +6,9 @@ import platform
 import subprocess
 
 
+# TODO:  Reference - https://docs.python.org/3/library/shutil.html
+
+
 # TODO:  use the Python API instead of calling external OS-levels commands here?
 #        Neither rm -P nor srm are standard, and neither has much effect on
 #        actual security since they don't work on SSDs anyway.
