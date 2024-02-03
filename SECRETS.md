@@ -1,4 +1,4 @@
-# Secrets and build 
+# Secrets and build
 
 The build uses [devpi](https://devpi.net/) as the builds target for all
 development, and [PyPI](https://pypi.org) as the publication target for stable
@@ -7,7 +7,7 @@ versions.
 
 ## Secrets
 
-The Makefile uses three different files (defined in `.gitignore`) for storing 
+The Makefile uses three different files (defined in `.gitignore`) for storing
 secrets:
 
 
@@ -42,7 +42,7 @@ pip install -U devpi-client
 Specify the devpi host (https://pypi.cime.dev):
 
 ```bash
-devpi use $(cat ./devpi-hostname.txt) 
+devpi use $(cat ./devpi-hostname.txt)
 ```
 
 Create your user name and root index:

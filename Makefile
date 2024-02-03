@@ -1,5 +1,4 @@
-# See: https://github.com/pr3d4t0r/poof/blob/master/LICENSE.txt
-# vim: set fileencoding=utf-8:
+# See: https://github.com/poof-backup/poof/blob/master/LICENSE.txt
 
 
 SHELL=/bin/bash
@@ -78,9 +77,6 @@ package:
 
 
 # The publish: target is for PyPI, not for the devpi server.
-# https://www.python.org/dev/peps/pep-0541/#how-to-request-a-name-transfer
-#
-# PyPI user name:  ciurana; pypi AT cime_net
 publish:
 	twine --no-color check $(DIST)/*
 	twine --no-color upload --verbose $(DIST)/*

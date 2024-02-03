@@ -1,5 +1,4 @@
-# See: https://github.com/pr3d4t0r/poof/blob/master/LICENSE.txt
-# vim: set fileencoding=utf-8:
+# See: https://github.com/poof-backup/poof/blob/master/LICENSE.txt
 
 
 from datetime import datetime
@@ -34,7 +33,7 @@ import poof.launchd as launchd
 
 # *** constants ***
 
-__VERSION__ = '1.3.1'
+__VERSION__ = "1.3.2"
 
 RCLONE_PROG      = '/usr/local/bin/rclone' if sys.platform == 'darwin' else 'rclone'
 RCLONE_PROG_TEST = 'ls' # a program we know MUST exist to the which command
@@ -562,7 +561,8 @@ def version(_):
     """
     Print software version and exit.
     """
-    click.echo('poof version %s' % (__VERSION__))
+    version = sys.version_info
+    click.echo('poof version %s on Python %d.%d.%d.%s' % (__VERSION__, version.major, version.minor, version.micro, version.releaselevel))
 
 
 def _cryptoggle(poofConf, rcloneConf, confFiles = POOF_CONFIG_FILES):
