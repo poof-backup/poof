@@ -20,8 +20,8 @@ VERSION=$(shell echo "from poof import __VERSION__; print(__VERSION__)" | python
 
 all: ALWAYS
 	make test
-	make package
 	make manpage
+	make package
 
 
 # TODO: Use rm -Rfv $$(find $(PACKAGE) | awk '/__pycache__$$/') after the poof
