@@ -12,6 +12,7 @@ from poof.launchd import LAUNCH_AGENT_FULL_PATH
 from poof.launchd import TEST_LAUNCH_AGENT_FULL_PATH
 from poof.launchd import TEST_LAUNCH_AGENT_POOF
 from poof.launchd import TEST_LAUNCH_AGENT_PROG
+from poof.nukedir import nukeDirectory
 
 
 import configparser
@@ -33,7 +34,7 @@ import poof.launchd as launchd
 
 # *** constants ***
 
-__VERSION__ = "1.3.7"
+__VERSION__ = "1.4.0"
 
 RCLONE_PROG      = '/usr/local/bin/rclone' if sys.platform == 'darwin' else 'rclone'
 RCLONE_PROG_TEST = 'ls' # a program we know MUST exist to the which command
@@ -200,26 +201,6 @@ def _getNukeDirectoryArgsWindows(path):
     raise NotImplementedError
 
 
-def _nukeDirectory(path):
-    result = False
-    error  = Exception()
-    args = False
-
-    hostPlatform = platform.system()
-
-    if os.path.exists(path):
-        if 'Darwin' == hostPlatform:
-            args =  _getNukeDirectoryArgsMac(path)
-        elif 'Linux' == hostPlatform:
-            args =  _getNukeDirectoryArgsLinux(path)
-
-    if args:
-        procResult = subprocess.run(args)
-        result = not procResult.returncode
-
-    return result, error
-
-
 def _config(confFiles = POOF_CONFIG_FILES, confDir = POOF_CONFIG_DIR, showConfig = True):
     confFile = confFiles['poof.conf']
     _initializeConfigIn(confFile, confDir)
@@ -312,9 +293,11 @@ def _clone(toCloud, confDir = POOF_CONFIG_DIR, confFiles = POOF_CONFIG_FILES, nu
             continue
 
         if toCloud and 'poof' not in localDir and nukeLocal:
-            status, error = _nukeDirectory(localDir)
-            if not status:
+            errorsList = nukeDirectory(localDir)
+            if errorsList:
                 click.secho('  > dir %s may be system-protected' % localDir, fg = 'bright_cyan')
+                for error in errorsList:
+                    click.secho(' > %s' % error, fg = 'bright_cyan')
         elif nukeLocal:
             poofDir = localDir
 

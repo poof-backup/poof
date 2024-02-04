@@ -34,13 +34,13 @@ requires-python = '>=3.7'
 
 
 [project.scripts]
-poof = "poof:main"
+poof = 'poof:main'
 
 
 [tool.pytest.ini_options]
-addopts = "-sv"
+addopts = '-sv'
 testpaths = [
-    "tests"
+    'tests'
 ]
 
 
@@ -48,7 +48,7 @@ testpaths = [
 include-package-data = true
 packages = [
     'poof',
-    # "tests", # because test modules import objects from other test modules
+    # 'tests', # because test modules import objects from other test modules
 ]
 
 
