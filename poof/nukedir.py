@@ -1,61 +1,56 @@
 # See: https://github.com/poof-backup/poof/blob/master/LICENSE.txt
 
 
+from shutil import rmtree
+
 import os
-import platform
-import subprocess
+import sys
 
 
-# TODO:  Reference - https://docs.python.org/3/library/shutil.html
+TEST_DIR = os.path.join('/', os.environ['HOME'], 'NukeDirTest')
 
 
-# TODO:  use the Python API instead of calling external OS-levels commands here?
-#        Neither rm -P nor srm are standard, and neither has much effect on
-#        actual security since they don't work on SSDs anyway.
-#
-#        https://github.com/poof-backup/poof/issues/59
-def _getNukeDirectoryArgsMac(path):
-	args = (
-		'/bin/rm',
-		'-Prf',
-		path,
-	)
-	return args
+# --- globals ---
+
+nukeErrorsList = None
 
 
-def _getNukeDirectoryArgsLinux(path):
-	args = (
-		'/bin/rm',
-		'-Rf',
-		path,
-	)
-	return args
+# --- implementation ---
 
-
-def _getNukeDirectoryArgsWindows(path):
-    raise NotImplementedError
-
-
-def nukeDirectoryProcess(path):
-    result = False
-    error  = Exception()
-    args = False
-
-    hostPlatform = platform.system()
-
-    if os.path.exists(path):
-        if 'Darwin' == hostPlatform:
-            args =  _getNukeDirectoryArgsMac(path)
-        elif 'Linux' == hostPlatform:
-            args =  _getNukeDirectoryArgsLinux(path)
-
-    if args:
-        procResult = subprocess.run(args)
-        result = not procResult.returncode
-
-    return result, error
+def _nukeDirectoryException(f, path, excinfo):
+    global nukeErrorsList
+    logEntry = { 'path': path, 'exception': excinfo[0].__name__, 'info': str(excinfo[1]), }
+    nukeErrorsList.append(logEntry)
 
 
 def nukeDirectory(path):
-    return nukeDirectoryProcess(path)
+    """
+    Deletes a directory and all its contents using system services.
+
+    Arguments
+    ---------
+        path
+    The canonical path to the directory to remove from the file system.
+
+    Returns
+    -------
+        aList
+    A list of log entries in Python dictionary format, ready to be processed by
+    a JSON-like logger (ELK, Datadog, etc.).  Each entry has these attributes:
+
+    `path` - The path to the file or directory that caused the exception
+    `exception' - The exception class name, in human-readable form
+    `info` - A human-readable descripton of the problem
+    """
+    global nukeErrorsList
+
+    nukeErrorsList = list()
+    # Use onexc instead of onerror for Python >= 3.12); see
+    # https://docs.python.org/3/library/shutil.html
+    if (sys.version_info.major >= 3 and sys.version_info.minor >= 12):
+        rmtree(path, onexc = _nukeDirectoryException)
+    else:
+        rmtree(path, onerror = _nukeDirectoryException)
+
+    return nukeErrorsList
 

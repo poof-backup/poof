@@ -293,9 +293,11 @@ def _clone(toCloud, confDir = POOF_CONFIG_DIR, confFiles = POOF_CONFIG_FILES, nu
             continue
 
         if toCloud and 'poof' not in localDir and nukeLocal:
-            status, error = nukeDirectory(localDir)
-            if not status:
+            errorsList = nukeDirectory(localDir)
+            if errorsList:
                 click.secho('  > dir %s may be system-protected' % localDir, fg = 'bright_cyan')
+                for error in errorsList:
+                    click.secho(' > %s' % error, fg = 'bright_cyan')
         elif nukeLocal:
             poofDir = localDir
 
