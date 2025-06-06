@@ -19,7 +19,7 @@ nukeErrorsList = None
 
 def _nukeDirectoryException(f, path, excinfo):
     global nukeErrorsList
-    logEntry = { 'path': path, 'exception': excinfo[0].__name__, 'info': str(excinfo[1]), }
+    logEntry = { 'path': path, 'exception': excinfo, }
     nukeErrorsList.append(logEntry)
 
 
@@ -47,10 +47,13 @@ def nukeDirectory(path):
     nukeErrorsList = list()
     # Use onexc instead of onerror for Python >= 3.12); see
     # https://docs.python.org/3/library/shutil.html
-    if (sys.version_info.major >= 3 and sys.version_info.minor >= 12):
-        rmtree(path, onexc = _nukeDirectoryException)
-    else:
-        rmtree(path, onerror = _nukeDirectoryException)
+    try:
+        if (sys.version_info.major >= 3 and sys.version_info.minor >= 12):
+            rmtree(path, onexc = _nukeDirectoryException)
+        else:
+            rmtree(path, onerror = _nukeDirectoryException)
+    except:
+        pass
 
     return nukeErrorsList
 

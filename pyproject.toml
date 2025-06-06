@@ -15,7 +15,6 @@ authors = [
 ]
 classifiers = [
     'Intended Audience :: Other Audience',
-    'License :: OSI Approved :: BSD License',
     'Operating System :: MacOS',
     'Operating System :: Unix',
     'Programming Language :: Python :: 3',
@@ -26,21 +25,25 @@ classifiers = [
 description = 'poof backup - instant, secure backup to a cloud drive'
 dynamic = [
     'dependencies',
-    'version',
 ]
+license = 'BSD-3-Clause'
 name = 'poof'
 readme = 'README.md'
 requires-python = '>=3.7'
+version = '1.5.0'
 
 
 [project.scripts]
-poof = 'poof:main'
+poof = 'poof.core:main'
 
 
 [tool.pytest.ini_options]
-addopts = '-sv'
+addopts = '-sv -p no:warnings -rm --cov="poof" --cov-report=html --show-capture="no"'
 testpaths = [
-    'tests'
+    'tests',
+]
+pythonpath = [
+    '.',
 ]
 
 
@@ -48,11 +51,9 @@ testpaths = [
 include-package-data = true
 packages = [
     'poof',
-    # 'tests', # because test modules import objects from other test modules
 ]
 
 
 [tool.setuptools.dynamic]
 dependencies = { file = 'requirements.txt' }
-version = { attr = 'poof.__VERSION__' }
 

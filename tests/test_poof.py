@@ -7,22 +7,22 @@ from unittest.mock import patch
 from click.testing import CliRunner
 from pyperclip import PyperclipException
 
-from poof import PoofStatus
-from poof import RCLONE_PROG_TEST
-from poof import _CRYPT_BOGUS_SECRETS
-from poof import _S3_BOGUS_SECRETS
-from poof import _cconfig
-from poof import _config
-from poof import _cryptoggle
-from poof import _display_launchdStatus
-from poof import _econfig
-from poof import _encryptionIsEnabled
-from poof import _neuter
-from poof import _timeLapsed
-from poof import _verify
-from poof import _verifyBogusValuesIn
-from poof import die
-from poof import paths
+from poof.core import PoofStatus
+from poof.core import RCLONE_PROG_TEST
+from poof.core import _CRYPT_BOGUS_SECRETS
+from poof.core import _S3_BOGUS_SECRETS
+from poof.core import _cconfig
+from poof.core import _config
+from poof.core import _cryptoggle
+from poof.core import _display_launchdStatus
+from poof.core import _econfig
+from poof.core import _encryptionIsEnabled
+from poof.core import _neuter
+from poof.core import _timeLapsed
+from poof.core import _verify
+from poof.core import _verifyBogusValuesIn
+from poof.core import die
+from poof.core import paths
 
 import copy
 import json
@@ -152,24 +152,24 @@ def test_die():
 
 
 def test__clone():
-    with patch('poof._clone') as _clone:
+    with patch('poof.core._clone') as _clone:
         # Nothing to do in the unit test - this needs integration testing fo' sho'
         assert _clone(confDir = TEST_POOF_CONF_DIR)
 
 
 def test_upload():
-    with patch('poof.upload') as upload:
+    with patch('poof.core.upload') as upload:
         # Nothing to do in the unit test - this needs integration testing fo' sho'
         assert upload(confDir = TEST_POOF_CONF_DIR)
 
 
 def test_download():
-    with patch('poof.download') as download:
+    with patch('poof.core.download') as download:
         assert download(confDir = TEST_POOF_CONF_DIR)
 
 
 def test_backup():
-    with patch('poof.backup') as backup:
+    with patch('poof.core.backup') as backup:
         assert backup(confDir = TEST_POOF_CONF_DIR)
 
 
