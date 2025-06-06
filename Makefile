@@ -93,13 +93,11 @@ targets:
 
 test: ALWAYS
 	@echo "Version = $(VERSION)"
-	@make local
-	pytest -v ./tests/poof-test.py
-	pytest -v ./tests/launchd-test.py
-	pytest -v ./tests/nukedir-test.py
-	pip uninstall -y $(PACKAGE)==$(VERSION) || true
+	pytest
 	rm -Rfv $$(find $(PACKAGE)/ | awk '/__pycache__$$/')
 	rm -Rfv $$(find tests | awk '/__pycache__$$/')
+
+
 
 
 tools:
