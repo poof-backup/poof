@@ -6,6 +6,7 @@ from enum import Enum
 from appdirs import AppDirs
 from pyperclip import PyperclipException
 
+from poof import __VERSION__
 from poof.launchd import LAUNCH_AGENT_FILE
 from poof.launchd import LAUNCH_AGENT_FULL_PATH
 from poof.launchd import TEST_LAUNCH_AGENT_FULL_PATH
@@ -33,9 +34,16 @@ import poof.launchd as launchd
 
 # *** constants ***
 
-__VERSION__ = "1.5.0"
+def die(message, exitCode = 0):
+    # Moved here instead of in functions because constant resolution errors may need it.
+    click.secho(message, fg = 'bright_yellow', bg = 'red')
+    if exitCode:
+        sys.exit(exitCode)
 
-RCLONE_PROG      = '/usr/local/bin/rclone' if sys.platform == 'darwin' else 'rclone'
+
+RCLONE_PROG = shutil.which('rclone')
+if not RCLONE_PROG:
+    die('rclone not found in PATH', 1)
 RCLONE_PROG_TEST = 'ls' # a program we know MUST exist to the which command
 SPECIAL_DIRS     = (
     'Desktop',
@@ -165,12 +173,6 @@ def _initializeCloningConfigIn(confFile, confDir):
             cloningConf.write(outputFile)
 
         os.chmod(confFile, stat.S_IRUSR | stat.S_IWUSR)
-
-
-def die(message, exitCode = 0):
-    click.secho(message, fg = 'bright_yellow', bg = 'red')
-    if exitCode:
-        sys.exit(exitCode)
 
 
 # TODO:  use the Python API instead of calling external OS-levels commands here?
